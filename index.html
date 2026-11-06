@@ -421,7 +421,7 @@ button.link{border:0;padding:0;color:var(--accent);background:none;text-decorati
       <div id="adminmsg" class="note ac" style="margin-top:8px"></div>
     </div>
     <hr>
-    <p class="note faint">별 자료: HYG 항성 카탈로그, d3-celestial(BSD). 별 위치는 이 기계가 현재 시각과 위치로 직접 계산합니다. 글꼴: 나눔고딕코딩·나눔손글씨 펜·나눔명조·Courier Prime. 수면 PC통신 · 심야접속 v32.7<br>Built with Claude</p>
+    <p class="note faint">별 자료: HYG 항성 카탈로그, d3-celestial(BSD). 별 위치는 이 기계가 현재 시각과 위치로 직접 계산합니다. 글꼴: 나눔고딕코딩·나눔손글씨 펜·나눔명조·Courier Prime. 수면 PC통신 · 심야접속 v32.8<br>Built with Claude</p>
   </div>
 </section>
 
@@ -599,7 +599,7 @@ function buildChannel(ch){
 }
 function volCurve(v){return Math.pow(v/100,1.8)*0.95}
 function ensureCtx(){
-  if(AU.ctx)return;const AC=window.AudioContext||window.webkitAudioContext;
+  if(AU.ctx)return;if(IS_IOS){try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}}const AC=window.AudioContext||window.webkitAudioContext;
   /* 'playback'은 출력 버퍼를 넉넉히 잡는다. 다른 프로그램이 CPU를 잠깐 다 써도(페이스북 알림 같은) 소리가 끊기지 않게. 잠드는 소리엔 지연이 상관없다 */
   try{AU.ctx=new AC({latencyHint:"playback"})}catch(e){AU.ctx=new AC()}
   AU.timerGain=AU.ctx.createGain();AU.master=AU.ctx.createGain();AU.master.gain.value=volCurve(ls.get("vol",35));
@@ -611,7 +611,7 @@ function ensureCtx(){
   if(DIRECT_OUT){AU.analyser.connect(AU.ctx.destination);AU.direct=true;AU.routed=true;return}
   AU.msDest=AU.ctx.createMediaStreamDestination();AU.analyser.connect(AU.msDest);audioEl.srcObject=AU.msDest.stream;
 }
-const DIRECT_OUT=!(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent))||matchMedia("(pointer:coarse)").matches);
+/* 아이폰·아이패드(모든 브라우저가 사파리 엔진)는 <audio> 다리로 보내면 소리가 아예 안 난다 → 아이폰만 스피커로 바로 */const IS_IOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));const DIRECT_OUT=IS_IOS||!(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent))||matchMedia("(pointer:coarse)").matches);
 let sessionPass=false,pendingWorld="";
 function memberName(){return ls.get("myHandle","")}
 const LITE=true;function chLocked(id){return false}
