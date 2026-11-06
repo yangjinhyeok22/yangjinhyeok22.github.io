@@ -63,7 +63,7 @@ main{margin-top:20px}
 .view{display:none}.view.on{display:block}
 .panel{border:1px solid var(--line);padding:14px 16px;background:var(--panel)}
 .ptitle{color:var(--ink-lo);font-size:.92em;letter-spacing:.14em;margin:0 0 10px}
-.ptitle::before{content:"── "}
+.ptitle::before{content:"─ "}
 .crumb{color:var(--ink-faint);font-size:.9em;margin:0 0 12px}
 .crumb button{border:0;padding:0;color:var(--ink-lo);background:none}
 .crumb button:hover{color:var(--accent)}
@@ -421,7 +421,7 @@ button.link{border:0;padding:0;color:var(--accent);background:none;text-decorati
       <div id="adminmsg" class="note ac" style="margin-top:8px"></div>
     </div>
     <hr>
-    <p class="note faint">별 자료: HYG 항성 카탈로그, d3-celestial(BSD). 별 위치는 이 기계가 현재 시각과 위치로 직접 계산합니다. 글꼴: 나눔고딕코딩·나눔손글씨 펜·나눔명조·Courier Prime. 수면 PC통신 · 심야접속 v32.8<br>Built with Claude</p>
+    <p class="note faint">별 자료: HYG 항성 카탈로그, d3-celestial(BSD). 별 위치는 이 기계가 현재 시각과 위치로 직접 계산합니다. 글꼴: 나눔고딕코딩·나눔손글씨 펜·나눔명조·Courier Prime. 수면 PC통신 · 심야접속 v32.9<br>Built with Claude</p>
   </div>
 </section>
 
@@ -533,6 +533,9 @@ button.link{border:0;padding:0;color:var(--accent);background:none;text-decorati
 
 <script>
 "use strict";
+/* 진단: 오류를 조용히 모아 두었다가 ?diag 로 열었을 때만 보여 준다 */
+const DIAG=[];function diagNote(w,e){try{DIAG.push(new Date().toTimeString().slice(0,8)+" "+w+": "+(e&&e.name?e.name+" ":"")+(e&&e.message!=null?e.message:String(e)));if(DIAG.length>30)DIAG.shift()}catch(_){}}
+addEventListener("error",e=>diagNote("오류",e.error||e.message));addEventListener("unhandledrejection",e=>diagNote("약속 실패",e.reason));
 /* ============ 공용 ============ */
 const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
 const REDUCED=matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -601,7 +604,7 @@ function volCurve(v){return Math.pow(v/100,1.8)*0.95}
 function ensureCtx(){
   if(AU.ctx)return;if(IS_IOS){try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}}const AC=window.AudioContext||window.webkitAudioContext;
   /* 'playback'은 출력 버퍼를 넉넉히 잡는다. 다른 프로그램이 CPU를 잠깐 다 써도(페이스북 알림 같은) 소리가 끊기지 않게. 잠드는 소리엔 지연이 상관없다 */
-  try{AU.ctx=new AC({latencyHint:"playback"})}catch(e){AU.ctx=new AC()}
+  try{AU.ctx=new AC({latencyHint:"playback"})}catch(e){diagNote("맥락(playback)",e);try{AU.ctx=new AC()}catch(e2){diagNote("맥락",e2);if(IS_IOS&&navigator.audioSession){try{navigator.audioSession.type="auto"}catch(_){}AU.ctx=new AC()}else throw e2}}
   AU.timerGain=AU.ctx.createGain();AU.master=AU.ctx.createGain();AU.master.gain.value=volCurve(ls.get("vol",35));
   AU.comp=AU.ctx.createDynamicsCompressor();AU.comp.threshold.value=-14;AU.comp.ratio.value=5;AU.comp.attack.value=0.01;AU.comp.release.value=0.3;
   AU.analyser=AU.ctx.createAnalyser();AU.analyser.fftSize=512;AU.analyser.smoothingTimeConstant=0.35;
@@ -618,7 +621,7 @@ const LITE=true;function chLocked(id){return false}
 async function playChannel(id){
   const ch=CH[id-1];if(!ch)return;const gen=++AU.gen;
   if(chLocked(id)){pendingWorld=ch.world;$("#joinintro").innerHTML='<span class="ac">'+esc(WORLDS[ch.world].name)+'(CH.00'+id+')은 정회원 구역입니다.</span> 요금은 똑같이 0원 — 아이디만 선점하면 바로 열립니다. 비밀번호도 이메일도 받지 않습니다. 정식 오픈 때는 카카오·네이버·구글 3초 연동 가입을 붙일 예정입니다.';show("join");return false}
-  ensureCtx();ensureRoute();if(AU.ctx.state==="suspended")await AU.ctx.resume().catch(()=>{});
+  ensureCtx();ensureRoute();if(AU.ctx.state!=="running")await AU.ctx.resume().catch(e=>diagNote("채널 깨우기",e));
   if(gen!==AU.gen)return true;
   if(AU.curId===id&&AU.cur)return true;
   if(AU.cur){AU.cur.stop();AU.cur=null}
@@ -671,7 +674,7 @@ audioEl.addEventListener("pause",()=>{if(AU.curId&&AU.routed){AU.routed=false;ar
 /* 다른 앱(스레드·전화)에서 돌아왔을 때만: 멈춘 맥락을 깨우고, 출력 스트림이 죽어 있으면 그때 한 번만 새로 깐다. 재생 중(모뎀 포함)에는 건드리지 않는다 */
 let audHiddenAt=0;document.addEventListener("visibilitychange",()=>{if(document.hidden){audHiddenAt=Date.now();return}if(!AU.ctx||!AU.curId||Date.now()-audHiddenAt<1500)return;setTimeout(()=>{if(AU.ctx.state!=="running")AU.ctx.resume().catch(()=>{});const tr=audioEl.srcObject&&audioEl.srcObject.getAudioTracks&&audioEl.srcObject.getAudioTracks()[0];if(AU.msDest&&(!tr||tr.readyState==="ended")){try{AU.analyser.disconnect(AU.msDest)}catch(e){}AU.msDest=AU.ctx.createMediaStreamDestination();AU.analyser.connect(AU.msDest);audioEl.srcObject=AU.msDest.stream}if(audioEl.paused&&AU.routed===false)audioEl.play().then(()=>{AU.routed=true}).catch(()=>armRouteRetry())},400)});
 function tryAutoplay(){
-  if(AU.curId)return;try{ensureCtx()}catch(e){return}
+  if(AU.curId||IS_IOS)return;try{ensureCtx()}catch(e){diagNote("첫 화면",e);return}
   if(AU.ctx.state==="running"){ensureRoute();playChannel(1);return}
   /* 브라우저가 허락하면(자주 쓰는 사이트) 여기서 바로 켜진다. 허락하지 않으면 손대지 않는다 — 모뎀 소리는 혼자 들려야 하니까. */
   AU.ctx.resume().then(()=>{if(AU.ctx.state==="running"&&!AU.curId&&curView==="intro"&&!bootTimers.length&&!booted){ensureRoute();playChannel(1)}}).catch(()=>{});
@@ -773,8 +776,8 @@ const LOG_FULL=[[0,"ATDT 0131033"],[0.3,"DIALING ........"],[2.2,"CARRIER DETECT
 const LOG_QUIET=[[0,"ATDT 0131033  (무음)"],[0.5,"CONNECT 14400"],[1.0,"심야접속 BBS에 오신 것을 환영합니다.\n회선은 느리고, 밤은 깁니다."]];
 function runConnect(withSound){
   if(bootTimers.length||booted)return;const log=$("#introlog");log.hidden=false;log.textContent="";log.innerHTML="";$("#dialbtn").disabled=true;$("#quietbtn").disabled=true;
-  try{ensureCtx();ensureRoute();if(AU.ctx.state==="suspended")AU.ctx.resume().catch(()=>{})}catch(e){}
-  let total=0;if(withSound){try{total=modemPlay()}catch(e){total=0}}
+  try{ensureCtx();ensureRoute();if(AU.ctx.state!=="running")AU.ctx.resume().catch(e=>diagNote("깨우기",e));if(IS_IOS){const b=AU.ctx.createBuffer(1,1,AU.ctx.sampleRate),u=AU.ctx.createBufferSource();u.buffer=b;u.connect(AU.ctx.destination);u.start(0)}}catch(e){diagNote("접속 준비",e)}
+  let total=0;if(withSound){try{total=modemPlay()}catch(e){total=0;diagNote("모뎀",e)}}
   dialedWithSound=!!(withSound&&total);
   const lines=withSound&&total?LOG_FULL:LOG_QUIET;const scale=REDUCED?0.35:1;
   lines.forEach(([t,l],i)=>bootTimers.push(setTimeout(()=>{const last=i===lines.length-1;const sp=document.createElement("span");sp.textContent=(log.childNodes.length?(last?"\n\n":"\n"):"")+l;if(last)sp.className="brite";log.append(sp);if(last){canSkip=true;$("#skiphint").hidden=false}},t*1000*scale)));
@@ -2013,6 +2016,39 @@ $$(".view").forEach(x=>x.classList.remove("on"));$("#view-intro").classList.add(
 })();
 </script>
 
+<script>
+/* 진단 화면 — https://…/?diag 로 열었을 때만 뜬다. 평소 화면에는 아무 영향 없음 */
+(function(){
+  if(!/[?&]diag\b/.test(location.search))return;
+  const wrap=document.createElement("div");
+  wrap.style.cssText="position:fixed;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top,0px));z-index:999;background:#05080c;border:1px solid #45545f;color:#c5c5c5;font:12px/1.5 ui-monospace,Menlo,monospace";
+  wrap.innerHTML='<div style="display:flex;gap:6px;flex-wrap:wrap;padding:6px 8px;border-bottom:1px solid #272727"><b style="color:#7b8fa6;margin-right:auto">진단</b><button id="dg-beep">삐 ① 웹오디오</button><button id="dg-wav">삐 ② 오디오 태그</button><button id="dg-copy">복사</button><button id="dg-fold">접기</button></div><pre id="dg-out" style="margin:0;padding:8px 10px;max-height:34vh;overflow:auto;white-space:pre-wrap;word-break:break-all"></pre>';
+  document.body.appendChild(wrap);
+  const out=wrap.querySelector("#dg-out");let beep="—",wav="—";
+  function line(){
+    const v=(document.body.innerHTML.match(/심야접속 v[0-9.]+/)||["?"])[0];
+    const as=navigator.audioSession?navigator.audioSession.type:"없음";
+    const c=AU.ctx?(AU.ctx.state+" · "+AU.ctx.sampleRate+"Hz · 지연 "+(AU.ctx.baseLatency!=null?AU.ctx.baseLatency.toFixed(3):"?")):"아직 없음";
+    out.textContent=[v,"아이폰: "+IS_IOS+" · 바로출력: "+DIRECT_OUT+" · 출력길: "+(AU.ctx?(AU.direct?"바로":"다리"):"—"),
+      "재생 모드(audioSession): "+as,"소리 장치(맥락): "+c,"재생 중 채널: "+(AU.curId||"없음")+" · 모뎀 로그: "+(dialedWithSound?"소리 있음":"무음/아직"),
+      "삐①: "+beep,"삐②: "+wav,"── 오류 ("+DIAG.length+") ──"].concat(DIAG.length?DIAG:["없음"]).join("\n")+"\n\n"+navigator.userAgent;
+  }
+  setInterval(line,500);line();
+  wrap.querySelector("#dg-beep").onclick=()=>{
+    try{const C=window.AudioContext||window.webkitAudioContext;const c=new C();const s0=c.state;c.resume().catch(e=>{beep+=" / 깨우기 실패 "+e.name});
+      const o=c.createOscillator(),g=c.createGain();g.gain.value=0.25;o.frequency.value=440;o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+0.8);
+      beep="새 맥락 "+s0;setTimeout(()=>{beep+=" → "+c.state;c.close().catch(()=>{})},1200)}catch(e){beep="오류 "+e.name+" "+e.message}
+  };
+  wrap.querySelector("#dg-wav").onclick=()=>{
+    try{const sr=22050,n=Math.floor(sr*0.7),buf=new ArrayBuffer(44+n*2),dv=new DataView(buf);const w=(o,t)=>{for(let i=0;i<t.length;i++)dv.setUint8(o+i,t.charCodeAt(i))};
+      w(0,"RIFF");dv.setUint32(4,36+n*2,true);w(8,"WAVEfmt ");dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);dv.setUint32(24,sr,true);dv.setUint32(28,sr*2,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);w(36,"data");dv.setUint32(40,n*2,true);
+      for(let i=0;i<n;i++)dv.setInt16(44+i*2,Math.sin(i/sr*2*Math.PI*660)*9000*Math.min(1,(n-i)/2000),true);
+      const a=new Audio(URL.createObjectURL(new Blob([buf],{type:"audio/wav"})));a.play().then(()=>{wav="재생됨"}).catch(e=>{wav="실패 "+e.name+" "+e.message})}catch(e){wav="오류 "+e.name+" "+e.message}
+  };
+  wrap.querySelector("#dg-copy").onclick=()=>{line();const t=out.textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{beep=beep},()=>{const r=document.createRange();r.selectNodeContents(out);const sel=getSelection();sel.removeAllRanges();sel.addRange(r)})};
+  wrap.querySelector("#dg-fold").onclick=e=>{out.hidden=!out.hidden;e.target.textContent=out.hidden?"펼치기":"접기"};
+})();
+</script>
 <script>if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
 </body>
 </html>
