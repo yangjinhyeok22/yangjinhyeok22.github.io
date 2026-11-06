@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>수면 PC통신 — 심야접속</title>
+<meta name="description" content="잠 못 드는 밤을 위한 핑크노이즈 방송국. 100% 무료, 광고 없음, 가입 없음. 1990년대 PC통신처럼 접속하는 수면 웹앱.">
+<meta name="theme-color" content="#000000">
+<meta property="og:title" content="수면 PC통신 — 심야접속">
+<meta property="og:description" content="잠 못 드는 밤을 위한 핑크노이즈 방송국. 100% 무료, 광고 없음, 가입 없음.">
+<meta property="og:image" content="icon-512.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<style>html,body{background:#000}</style>
+</head>
+<body>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&display=swap">
+<style>
+/* 레이아웃: 단말 1열(첫 화면·메뉴·청취방·후원·도움말) + 아래 상태줄. 의도적 단일 다크 테마. */
+:root{
+  --bg:#000000; --panel:#050505; --line:#272727; --line-soft:#161616;
+  --ink:#9c9c9c; --ink-hi:#c5c5c5; --ink-lo:#6c6c6c; --ink-faint:#474747;
+  --accent:#7b8fa6; --accent-dim:#45545f; --sel:#0d1114;
+  --mono:'Nanum Gothic Coding','Courier New',ui-monospace,monospace;
+  color-scheme:dark;
+}
+:root[data-lum="0"]{--ink:#767676;--ink-hi:#959595;--ink-lo:#535353;--ink-faint:#363636;--accent:#5c6d7e;--accent-dim:#35414a;--line:#1e1e1e;--line-soft:#111111;--sel:#090c0e}
+:root[data-lum="2"]{--ink:#bababa;--ink-hi:#e2e2e2;--ink-lo:#878787;--ink-faint:#555555;--accent:#95abc4;--accent-dim:#5a6c7d;--line:#333333;--line-soft:#1d1d1d;--sel:#11161a}
+html,body{min-height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--mono);font-size:clamp(13px,1.6vw,14.5px);line-height:1.8;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 96px;-webkit-font-smoothing:antialiased}
+.wrap{max-width:744px;margin:0 auto}
+#shell{padding-bottom:var(--sbh,120px)}
+a{color:var(--accent)}
+hr{border:0;border-top:1px solid var(--line-soft);margin:14px 0}
+button{font:inherit;color:var(--ink-hi);background:transparent;border:1px solid var(--line);padding:3px 12px;cursor:pointer;border-radius:0}
+button:hover{background:var(--sel);border-color:var(--accent-dim)}
+button:disabled{color:var(--ink-faint);border-color:var(--line-soft);cursor:default;background:transparent}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible{outline:1px dashed var(--accent);outline-offset:2px}
+input,textarea,select{font:inherit;color:var(--ink-hi);background:var(--panel);border:1px solid var(--line);padding:4px 8px;border-radius:0;max-width:100%}
+::selection{background:var(--accent-dim);color:#000}
+.hi{color:var(--ink-hi)}.dim{color:var(--ink-lo)}.faint{color:var(--ink-faint)}.ac{color:var(--accent)}.num{font-variant-numeric:tabular-nums}
+.note{color:var(--ink-lo);font-size:.93em}
+
+/* 머리글 */
+header{padding-top:18px}
+.masthead{border:3px double var(--line);padding:10px 14px;display:flex;flex-wrap:wrap;gap:2px 16px;align-items:baseline;justify-content:space-between}
+.masthead .svc{color:var(--ink-hi);font-weight:700;letter-spacing:.3em;font-size:1.3em}
+.masthead .svc .en{display:block;letter-spacing:.2em;font-size:.56em;font-weight:400;color:var(--ink-lo)}
+.masthead .clockbox{text-align:right;color:var(--ink-lo);font-size:.92em;min-width:0}
+.masthead .clockbox b{color:var(--ink);font-weight:400;font-variant-numeric:tabular-nums}
+.tagline{color:var(--ink-lo);font-size:.92em;margin:8px 2px 0}
+
+/* 패널 */
+main{margin-top:20px}
+.view{display:none}.view.on{display:block}
+.panel{border:1px solid var(--line);padding:14px 16px;background:var(--panel)}
+.ptitle{color:var(--ink-lo);font-size:.92em;letter-spacing:.14em;margin:0 0 10px}
+.ptitle::before{content:"─ "}
+.crumb{color:var(--ink-faint);font-size:.9em;margin:0 0 12px}
+.crumb button{border:0;padding:0;color:var(--ink-lo);background:none}
+.crumb button:hover{color:var(--accent)}
+.menu{list-style:none;margin:0;padding:0}
+.menu button{display:flex;width:100%;text-align:left;gap:14px;align-items:baseline;border:0;border-bottom:1px solid var(--line-soft);padding:10px 6px;color:var(--ink)}
+.menu button:hover{background:var(--sel);color:var(--ink-hi)}
+.menu .no{color:var(--accent);min-width:1.4em}
+.menu .nm{color:var(--ink-hi);min-width:6.5em}
+.menu .ds{color:var(--ink-lo);font-size:.92em;flex:1;min-width:0}
+.kbd-hint{margin-top:12px;color:var(--ink-faint);font-size:.9em}
+.frow{display:flex;gap:10px 16px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.ctrl{display:flex;gap:10px 22px;flex-wrap:wrap;align-items:center;margin-top:14px;color:var(--ink-lo);font-size:.95em}
+.ctrl label{display:flex;gap:8px;align-items:center}
+input[type=range]{width:150px;accent-color:var(--accent);background:transparent;border:0;padding:0}
+
+/* 인트로 */
+#view-intro{min-height:70vh;display:none}
+#view-intro.on{display:flex;align-items:center}
+.intro{max-width:600px;margin:0 auto;padding:30px 0 10px}
+.intro p{color:var(--ink);line-height:2.2;margin:0 0 18px;text-wrap:pretty}
+.intro .q{color:var(--ink-hi)}
+.intro .a{color:var(--accent);font-weight:700}
+.intro .credit{color:var(--ink-lo);letter-spacing:.18em;font-size:.86em;margin-top:26px}
+.intro .acts{display:flex;gap:18px;align-items:center;flex-wrap:wrap;margin-top:34px}
+.intro .dial{font-size:1.05em;letter-spacing:.14em;padding:8px 22px;border-color:var(--accent-dim);color:var(--ink-hi)}
+.intro .quiet{border:0;color:var(--ink-faint);padding:0}
+.intro .quiet:hover{color:var(--accent);background:none}
+
+/* 채널 카드 */
+.chan{border:1px solid var(--line-soft);padding:12px 14px;margin:10px 0;background:var(--panel)}
+.chan.playing{border-color:var(--accent-dim);background:var(--sel)}
+.chan .row1{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+.chan .chno{color:var(--accent);letter-spacing:.08em}
+.chan .chname{color:var(--ink-hi);font-weight:700}
+.chan .fee{margin-left:auto;color:var(--ink-faint);font-size:.88em}
+.chan .desc{margin:6px 0 2px;color:var(--ink);font-size:.95em}
+.chan .fit{color:var(--ink-lo);font-size:.93em}
+.chan .fit::before{content:"▷ "}
+.chan .act{margin-top:9px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chan .state{color:var(--accent);font-size:.92em}
+
+/* 상태줄 */
+#statusbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--bg);border-top:1px solid var(--line);
+  padding:7px max(16px,env(safe-area-inset-right,0px)) calc(7px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
+#statusbar .inner{max-width:744px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"np vu play" "time time time";gap:2px 12px;align-items:center;color:var(--ink-lo);font-size:.9em}
+#statusbar .np{grid-area:np;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#statusbar #vu{grid-area:vu}#statusbar #sbplay{grid-area:play;min-width:4.2em}#statusbar .time{grid-area:time;display:flex;justify-content:space-between;white-space:nowrap}
+#statusbar .np b{color:var(--accent);font-weight:400}
+#statusbar button{padding:1px 9px;font-size:.95em}
+#vu{color:var(--accent-dim);display:inline-flex;gap:4px;width:4.6em;flex:none;transform:scaleX(.7);transform-origin:left}#vu i{display:inline-block;width:.75em;text-align:center;font-style:normal}
+footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9}
+
+/* 겹창(나가기·근거·안내) */
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:60;background:#050505;border-top:1px solid var(--line);
+  padding:14px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:none;max-height:78vh;overflow:auto}
+.sheet.on{display:block}
+.sheet .inner{max-width:744px;margin:0 auto}
+.sheet .acts{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.sheet h3{font-size:1em;color:var(--ink-hi);margin:0 0 8px;font-weight:700}
+.evrow{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}.evlink{border:1px solid var(--line);color:var(--accent);padding:6px 10px;font-family:var(--mono)}.evlink:hover{background:var(--sel)}
+.whisper{text-align:center;margin:26px 0 6px}.whisper button{border-color:var(--line-soft);color:var(--ink-faint);font-size:.82em;padding:4px 12px}.whisper button:hover{color:var(--ink)}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:55;display:none}
+.scrim.on{display:block}
+
+.introlog{font-size:.82em;color:var(--ink-lo);background:#040404;border:1px solid var(--line-soft);padding:8px 10px;margin:22px 0 0;white-space:pre-wrap;min-height:4.5em;max-width:600px;line-height:1.7;font-family:var(--mono)}
+.introlog[hidden],#skiphint[hidden]{display:none}
+.introlog .brite{color:var(--ink-hi)}
+#toast{position:fixed;left:50%;bottom:calc(110px + env(safe-area-inset-bottom,0px));transform:translateX(-50%) translateY(8px);background:#0b0b0b;border:1px solid var(--accent-dim);color:var(--ink-hi);padding:8px 14px;font-size:.92em;z-index:80;opacity:0;transition:opacity .25s,transform .25s;pointer-events:none;max-width:88vw;text-align:center}
+#toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+@media (max-width:460px){.masthead .svc{letter-spacing:.14em}.menu .nm{min-width:5.2em}input[type=range]{width:120px}}
+</style>
+
+<div class="wrap" id="shell">
+<header>
+  <div class="masthead">
+    <div class="svc">심야접속<span class="en">SLEEPINGBAG · BEFORE INTERNET IN KOREA</span></div>
+    <div class="clockbox">현재시각 <b id="clock" class="num">--:--:--</b><br>회선 <span id="linestate">대기</span></div>
+  </div>
+  <p class="tagline">잠이 안 오는 밤을 위한 무료 핑크 노이즈 방송국 · 100% 무료 · 광고 없음 · 청취자 후원으로 운영</p>
+</header>
+
+<main>
+
+<!-- 인트로 -->
+<section class="view" id="view-intro">
+  <div class="intro">
+    <p>바이브 코딩을 열심히 배우던 어느 불면의 밤, 나는 물었다.</p>
+    <p class="q">"클로드야, 근데 인간의 잠이라는 행위는 어쩌면 가장 죽음에 근접해 있는 행위가 아닐까?"</p>
+    <p>Fable 5.1, 노력 최대치로 깊생에 빠진 클로드가 15분이나 생각한 것이 무색할 정도로 짧게 나에게 답했다.</p>
+    <p class="a">"그래서 매일 연습하는 겁니다 — 깨어나는 것을."</p>
+    <p class="credit">BUILT WITH CLAUDE</p>
+    <div class="acts">
+      <button class="dial" id="dialbtn">ATDT 0131033</button>
+      <button class="quiet" id="quietbtn">조용히 접속</button>
+    </div>
+    <pre id="introlog" class="introlog" hidden></pre>
+    <p class="note faint" id="skiphint" hidden>화면을 누르면 바로 들어갑니다</p>
+  </div>
+</section>
+
+<!-- 주 메뉴 -->
+<section class="view" id="view-main">
+  <p class="crumb"><button data-go="intro">← 처음 화면</button></p>
+  <div class="panel">
+    <p class="ptitle">주 메뉴 — 들어갈 곳을 고르십시오</p>
+    <ul class="menu">
+      <li><button data-go="sound"><span class="no">1.</span><span class="nm">청취방</span><span class="ds">다섯 채널 · 음량 · 취침 타이머 · 화면은 꺼도 됩니다</span></button></li>
+      <li><button data-go="support"><span class="no">2.</span><span class="nm">후원</span><span class="ds">100% 무료 방송국을 청취자가 후원하는 방식</span></button></li>
+      <li><button data-go="help"><span class="no">3.</span><span class="nm">도움말/설정</span><span class="ds">이용 안내 · 보호 원칙 · 밝기</span></button></li>
+    </ul>
+    <p class="kbd-hint">숫자키 1-3 으로 이동 · ESC 로 이 화면</p>
+  </div>
+  <p class="note" style="margin-top:12px" id="mainticker">다섯 채널 전부 무료 · 가입 없음 · 흔적 없음</p>
+  <p class="note faint leanline" style="margin-top:4px"></p>
+</section>
+
+<!-- 청취방 -->
+<section class="view" id="view-sound">
+  <p class="crumb"><button data-go="main">← 나가기</button> <span>청취방</span></p>
+  <div class="panel">
+    <p class="ptitle">청취방 — 핑크노이즈 다섯 채널</p>
+    <p class="note">녹음된 음원이 아니라 접속한 이 기계가 그 자리에서 소리를 합성합니다. 끊김도, 반복 구간도, 저작권자도 없습니다.</p>
+    <div id="chanlist"></div>
+    <div class="ctrl">
+      <label>음량 <input type="range" id="vol" min="0" max="100" step="1"></label>
+      <label>취침 타이머 <button id="timerbtn">끄지 않음</button></label>
+      <span id="timernote" class="faint"></span>
+    </div>
+    <p class="note faint" style="margin-top:10px">화면을 꺼도 재생이 이어지도록 처리해 두었습니다. 지금 그대로 끄고 주무셔도 됩니다(갤럭시 기준).</p>
+    <p class="note ac" id="noaudio" style="margin-top:10px" hidden></p>
+  </div>
+  <p class="whisper"><button id="awakebtn">정말 잠이 안 오시나요?</button></p>
+</section>
+
+<!-- 후원 -->
+<section class="view" id="view-support">
+  <p class="crumb"><button data-go="main">← 나가기</button> <span>후원</span></p>
+  <div class="panel">
+    <p class="ptitle">청취자 후원</p>
+    <p class="hi">이 방송국은 100% 무료입니다. 앞으로도 과금은 없습니다.</p>
+    <p class="note">광고도 없습니다. 대신 심야 라디오가 늘 그래 왔듯, 듣는 사람이 방송국을 후원합니다. 후원은 의무가 아니고, 안 해도 아무것도 잠기지 않습니다.</p>
+    <hr>
+    <p class="dim num">이번 달 음원 저작권료: 0원 · 서버에 둔 음원: 0개 · 광고 집행: 0건 — 소리는 전부 당신 기계가 만들고 있으니까.</p>
+    <div id="donatebox" class="frow"><span class="note">후원 창구는 아직 닫혀 있습니다. 시삽이 열면 여기 버튼이 생깁니다. 그때까지는 그냥 잘 주무시는 게 후원입니다.</span></div>
+  </div>
+</section>
+
+<!-- 도움말/설정 -->
+<section class="view" id="view-help">
+  <p class="crumb"><button data-go="main">← 나가기</button> <span>도움말/설정</span></p>
+  <div class="panel">
+    <p class="ptitle">이용 안내</p>
+    <p class="note">수면을 위한 PC통신 심야접속에 들어오셨습니다. 소리는 전부 무료고, 아무도 당신을 깨우지 않습니다. 화면 테두리는 슬리핑백입니다 — 당신은 지금 그 안에 있습니다.</p>
+    <hr>
+    <p class="dim">· <span class="hi">소리</span> — 다섯 채널 모두 접속한 당신의 기계가 그 자리에서 만드는 소리입니다. 녹음된 음원이 없으니 권리 문제도, 서버 비용도 없습니다. 분홍 소음 위에 파도·비·바람·불을 얹었습니다.</p>
+    <p class="dim">· <span class="hi">화면은 꺼도 됩니다</span> — 지금 그대로 끄고 주무셔도 됩니다(갤럭시 기준).</p>
+    <p class="dim">· <span class="hi">비행기 모드</span> — 심야접속은 스트리밍이 아닙니다. 프로그래밍입니다. 따라서 접속 후에는 비행기 모드로 바꾸셔도 정상 작동합니다. 한 번 접속한 브라우저에서는 다음부터 인터넷 없이도 열립니다.</p>
+    <p class="dim">· <span class="hi">취침 타이머</span> — 청취방에서 30·60·90분을 고르면 그 시각에 조용히 멈춥니다.</p>
+    <p class="dim">· <span class="hi">가입 없음</span> — 아이디도, 전화번호도, 이메일도 받지 않습니다. 남는 것은 이 기계 안의 "함께 한 시간"뿐입니다.</p>
+    <p class="dim">· <span class="hi">근거</span> — 청취방 맨 아래 [정말 잠이 안 오시나요?]를 누르면 채널마다 제공되는 소리가 수면에 도움이 된다는 내용의 논문들로 이어집니다. 읽다 보면 잠이 옵니다.</p>
+    <hr>
+    <p class="ptitle">설정</p>
+    <div class="ctrl">
+      <label>글자 밝기 <button id="lumbtn">보통</button></label>
+    </div>
+    <p class="note faint leanline" style="margin-top:10px"></p>
+    <hr>
+    <p class="note faint">글꼴: 나눔고딕코딩. 수면 PC통신 · 심야접속 v33.33<br>Built with Claude</p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  심야접속 — 서버에 음원 없음 · 녹음된 음원이 아니라, 접속한 당신의 기계가 그 자리에서 만드는 소리입니다 · 과금 없음 · 광고 없음 · 청취자 후원<br>
+  운영: 시삽 │ 회선 상태가 나쁘면 새로고침 한 번이면 됩니다
+</footer>
+</div>
+
+<div id="statusbar">
+  <div class="inner">
+    <span class="np" id="npline">■ 정지됨 — 청취방에서 채널을 고르십시오</span>
+    <span id="vu" aria-hidden="true"></span>
+    <button id="sbplay">재생</button>
+    <span class="time num"><span id="timerleft"></span><span>이용시간 <span id="elapsed">00:00:00</span></span></span>
+  </div>
+</div>
+
+<!-- 겹창 -->
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet"><div class="inner" id="sheetin"></div></div>
+
+<audio id="radioout" playsinline></audio>
+
+<script>
+"use strict";
+/* 진단: 오류를 조용히 모아 두었다가 ?diag 로 열었을 때만 보여 준다 */
+const DIAG=[];function diagNote(w,e){try{DIAG.push(new Date().toTimeString().slice(0,8)+" "+w+": "+(e&&e.name?e.name+" ":"")+(e&&e.message!=null?e.message:String(e)));if(DIAG.length>30)DIAG.shift()}catch(_){}}
+addEventListener("error",e=>diagNote("오류",e.error||e.message));addEventListener("unhandledrejection",e=>diagNote("약속 실패",e.reason));
+/* ============ 공용 ============ */
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const REDUCED=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const ls={get(k,d){try{const v=localStorage.getItem("sb_"+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
+          set(k,v){try{localStorage.setItem("sb_"+k,JSON.stringify(v))}catch(e){}}};
+const pad=n=>String(n).padStart(2,"0");
+const fmtClock=d=>pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds());
+function esc(x){const d=document.createElement("div");d.textContent=x==null?"":String(x);return d.innerHTML}
+
+/* ============ 채널 ============ */
+const CH=[
+ {id:1,key:"waves",name:"바다 소리",full:"핑크노이즈 001: 바다 소리",
+  desc:"방파제 안쪽까지만 들어오는 느린 물 소리입니다. 뇌파가 알파파로 어쩌고 하는 논문이 많다는데, 시삽은 끝까지 읽기 전에 번번이 잠들어서 결론을 모릅니다.",fit:"생각이 꼬리에 꼬리를 무는 분께 딱입니다."},
+ {id:2,key:"rain",name:"빗소리",full:"핑크노이즈 002: 빗소리",
+  desc:"양철 지붕에 떨어지는 비가 아니라, 젖은 아스팔트와 창틀을 두드리는 빗소리를 합성해서 들려드립니다. 베타파를 가라앉힌다는 설이 있으나, 검증은 각자의 이불 속에서 하시면 됩니다.",fit:"적막이 오히려 신경 쓰이는 분께 딱입니다."},
+ {id:3,key:"pink",name:"원음",full:"핑크노이즈 003: 원음",
+  desc:"아무 장식 없는 1/f 순정 핑크 노이즈. 우주 배경 같은 소리라 알파파니 세타파니 따질 것도 없이 그냥 공평하게 조용해집니다.",fit:"선풍기·서버 팬 소리에 길든 분께 딱입니다."},
+ {id:4,key:"wind",name:"밤바람",full:"핑크노이즈 004: 밤바람",
+  desc:"문풍지가 떨리기 직전의 바람이 높았다 낮았다 하며 생각을 데려갑니다. 세타파 구간이라는 설이 있지만 어디로 데려가는지는 시삽도 모릅니다 — 돌아와서 말해 준 사람이 없어서.",fit:"옛집 겨울밤이 그리운 분께 딱입니다."},
+ {id:5,key:"fire",name:"모닥불",full:"핑크노이즈 005: 모닥불",
+  desc:"장작 타닥거림과 낮은 불바람. 델타파 어쩌고 하기 훨씬 전부터 인류가 적어도 삼십만 년째 임상 중인, 검증된 수면제입니다. 보고된 부작용은 고기가 굽고 싶어진다는 것 하나뿐인데, 이 불은 합성이라 올려도 익지 않습니다.",fit:"혼자인 밤이 조금 쓸쓸한 분께 딱입니다."}
+];
+
+/* ============ 오디오 엔진 (전부 합성) ============ */
+const AU={ctx:null,master:null,timerGain:null,comp:null,analyser:null,msDest:null,direct:false,cur:null,curId:0,buffers:{},gen:0};
+const audioEl=$("#radioout");
+/* 소리를 만들 수 없는 기기(예: 아이폰 차단 모드)는 말없이 넘어가지 않고 알려 준다 */
+const NO_AUDIO=!(window.AudioContext||window.webkitAudioContext);
+const NOAUDIO_HTML='이 기기에서는 소리를 만드는 기능이 꺼져 있습니다. 이를테면 아이폰 차단 모드의 경우가 그렇습니다. 사용하시는 기종과 차단 모드 여부를 <a href="mailto:simyajeobsok@gmail.com">simyajeobsok@gmail.com</a>으로 제보 주세요.';
+function noAudio(){openSheet('<p class="hi">'+NOAUDIO_HTML+'</p><div class="acts"><button id="sheetclose">닫기</button></div>');$("#sheetclose").addEventListener("click",closeSheet)}
+function pinkInto(a,g){let b0=0,b1=0,b2=0,b3=0,b4=0,b5=0,b6=0;for(let i=0;i<a.length;i++){const w=Math.random()*2-1;b0=0.99886*b0+w*0.0555179;b1=0.99332*b1+w*0.0750759;b2=0.96900*b2+w*0.1538520;b3=0.86650*b3+w*0.3104856;b4=0.55000*b4+w*0.5329522;b5=-0.7616*b5-w*0.0168980;a[i]=(b0+b1+b2+b3+b4+b5+b6+w*0.5362)*0.11*g;b6=w*0.115926}}
+function brownInto(a,g){let l=0;for(let i=0;i<a.length;i++){const w=Math.random()*2-1;l=(l+0.02*w)/1.02;a[i]=l*3.0*g}}
+function crossLoop(raw,n,xf){const o=new Float32Array(n);o.set(raw.subarray(0,n));for(let i=0;i<xf;i++){const t=i/xf,a=Math.cos(t*Math.PI/2),b=Math.sin(t*Math.PI/2);o[i]=raw[n+i]*a+raw[i]*b}return o}
+function makeLoopBuffer(secs,fill){const sr=AU.ctx.sampleRate,n=Math.floor(secs*sr),xf=sr;const buf=AU.ctx.createBuffer(2,n,sr);for(let c=0;c<2;c++){const raw=new Float32Array(n+xf);fill(raw,sr,c);buf.copyToChannel(crossLoop(raw,n,xf),c)}return buf}
+function bakeDrops(raw,sr,o){const total=Math.floor(o.perSec*(raw.length/sr));for(let k=0;k<total;k++){const pos=Math.floor(Math.random()*(raw.length-sr*0.06));const len=Math.floor(sr*(o.minMs+Math.random()*o.varMs)/1000);const amp=o.amp*(0.25+Math.pow(Math.random(),2)*0.75);const tau=len/3.2;if(Math.random()<o.tonal){const f=o.f0+Math.random()*o.f1;for(let i=0;i<len;i++)raw[pos+i]+=Math.sin(i/sr*6.28318*f)*Math.exp(-i/tau)*amp*0.55}else{for(let i=0;i<len;i++)raw[pos+i]+=(Math.random()*2-1)*Math.exp(-i/tau)*amp}}}
+function getBuffer(key){
+  if(AU.buffers[key])return AU.buffers[key];let b;
+  if(key==="pink")b=makeLoopBuffer(36,r=>pinkInto(r,1));
+  else if(key==="rainbake")b=makeLoopBuffer(32,(r,sr)=>{pinkInto(r,0.34);const a=Math.exp(-6.28318*420/sr);let y=0,px=0;for(let i=0;i<r.length;i++){const x=r[i];y=a*(y+x-px);px=x;r[i]=y}bakeDrops(r,sr,{perSec:210,minMs:3,varMs:14,amp:0.42,tonal:0.16,f0:1400,f1:3200})});
+  else if(key==="firebake")b=makeLoopBuffer(34,(r,sr)=>{brownInto(r,0.5);bakeDrops(r,sr,{perSec:5,minMs:1.2,varMs:6,amp:0.9,tonal:0.08,f0:300,f1:900});bakeDrops(r,sr,{perSec:14,minMs:0.8,varMs:2.5,amp:0.34,tonal:0,f0:0,f1:0})});
+  AU.buffers[key]=b;return b;
+}
+function lfo(f,s,target,delay){const o=AU.ctx.createOscillator(),g=AU.ctx.createGain();o.frequency.value=f;g.gain.value=s;o.connect(g).connect(target);o.start(AU.ctx.currentTime+(delay||0));return o}
+function srcOf(key,off){const s=AU.ctx.createBufferSource();s.buffer=getBuffer(key);s.loop=true;s.start(0,off||Math.random()*20);return s}
+/* 천둥 — 갈색 잡음을 아주 낮게 거르고, 두세 번 굴러가는 포락선 */
+function thunder(out){const c=AU.ctx,t=c.currentTime;AU.lastThunder=performance.now();const n=c.createBufferSource();n.buffer=getBuffer("pink");n.loop=true;n.start(t,Math.random()*20);const lp=c.createBiquadFilter();lp.type="lowpass";lp.frequency.setValueAtTime(70,t);lp.frequency.linearRampToValueAtTime(150,t+0.6);lp.frequency.exponentialRampToValueAtTime(55,t+6);lp.Q.value=0.9;const g=c.createGain();const D=5+Math.random()*3;g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(1.6,t+0.35);g.gain.exponentialRampToValueAtTime(0.5,t+1.4);g.gain.exponentialRampToValueAtTime(1.2,t+2.1);g.gain.exponentialRampToValueAtTime(0.3,t+3.2);g.gain.exponentialRampToValueAtTime(0.7,t+3.9);g.gain.exponentialRampToValueAtTime(0.0001,t+D);n.connect(lp).connect(g).connect(out);n.stop(t+D+0.1)}
+function buildChannel(ch){
+  const out=AU.ctx.createGain();out.gain.value=0;const stops=[];
+  const F=(type,f,q)=>{const x=AU.ctx.createBiquadFilter();x.type=type;x.frequency.value=f;x.Q.value=q||0.8;return x};
+  if(ch.key==="pink"){const s=srcOf("pink"),lp=F("lowpass",8600);s.connect(lp).connect(out);stops.push(s)}
+  else if(ch.key==="waves"){const s=srcOf("pink"),lp=F("lowpass",430,0.7),g=AU.ctx.createGain();g.gain.value=0.52;s.connect(lp).connect(g).connect(out);stops.push(s,lfo(0.052,0.36,g.gain),lfo(0.019,0.13,g.gain),lfo(0.052,110,lp.frequency,0));const s2=srcOf("pink",5),bp=F("bandpass",1500,0.9),g2=AU.ctx.createGain();g2.gain.value=0.02;s2.connect(bp).connect(g2).connect(out);stops.push(s2,lfo(0.052,0.16,g2.gain,2.4))}
+  else if(ch.key==="rain"){const s=srcOf("rainbake"),lp=F("lowpass",8200);s.connect(lp).connect(out);stops.push(s);
+    /* 천둥: 40~130초마다 한 번, 아주 낮게 */const th={t:0,stop(){clearTimeout(this.t)}};const sched=()=>{th.t=setTimeout(()=>{thunder(out);sched()},40000+Math.random()*90000)};th.t=setTimeout(()=>{thunder(out);sched()},12000+Math.random()*30000);stops.push(th)}
+  else if(ch.key==="wind"){const s=srcOf("pink"),bp=F("bandpass",470,1.5),g=AU.ctx.createGain();g.gain.value=0.74;s.connect(bp).connect(g).connect(out);stops.push(s,lfo(0.041,245,bp.frequency),lfo(0.096,120,bp.frequency,3),lfo(0.096,0.16,g.gain,1.5))}
+  else if(ch.key==="fire"){const s=srcOf("firebake"),lp=F("lowpass",5200);s.connect(lp).connect(out);stops.push(s)}
+  out.connect(AU.timerGain);
+  const trims={pink:0.8,waves:1.15,rain:0.85,wind:0.95,fire:0.85};
+  return {out,trim:trims[ch.key]||1,stop(){const t=AU.ctx.currentTime;out.gain.cancelScheduledValues(t);out.gain.setValueAtTime(out.gain.value,t);out.gain.linearRampToValueAtTime(0.0001,t+0.5);setTimeout(()=>{stops.forEach(x=>{try{x.stop()}catch(e){}});try{out.disconnect()}catch(e){}},700)}};
+}
+function volCurve(v){return Math.pow(v/100,1.8)*0.95}
+function ensureCtx(){
+  if(AU.ctx)return;if(IS_IOS){try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}}const AC=window.AudioContext||window.webkitAudioContext;
+  /* 'playback'은 출력 버퍼를 넉넉히 잡는다. 다른 프로그램이 CPU를 잠깐 다 써도(페이스북 알림 같은) 소리가 끊기지 않게. 잠드는 소리엔 지연이 상관없다 */
+  try{AU.ctx=new AC({latencyHint:"playback"})}catch(e){diagNote("맥락(playback)",e);try{AU.ctx=new AC()}catch(e2){diagNote("맥락",e2);if(IS_IOS&&navigator.audioSession){try{navigator.audioSession.type="auto"}catch(_){}AU.ctx=new AC()}else throw e2}}
+  AU.timerGain=AU.ctx.createGain();AU.master=AU.ctx.createGain();AU.master.gain.value=volCurve(ls.get("vol",35));
+  AU.comp=AU.ctx.createDynamicsCompressor();AU.comp.threshold.value=-14;AU.comp.ratio.value=5;AU.comp.attack.value=0.01;AU.comp.release.value=0.3;
+  AU.analyser=AU.ctx.createAnalyser();AU.analyser.fftSize=512;AU.analyser.smoothingTimeConstant=0.35;
+  AU.timerGain.connect(AU.master).connect(AU.comp).connect(AU.analyser);
+  AU.fx=AU.ctx.createGain();AU.fx.gain.value=0.75;AU.fx.connect(AU.comp);
+  /* 휴대폰은 화면을 꺼도 이어지도록 <audio> 다리를 거치고, PC는 다리 없이 바로 스피커로 — 다리를 거치면 CPU가 바쁠 때 '뜨뜨뜨' 끊기기 쉽다 */
+  if(DIRECT_OUT){AU.analyser.connect(AU.ctx.destination);AU.direct=true;AU.routed=true;return}
+  AU.msDest=AU.ctx.createMediaStreamDestination();AU.analyser.connect(AU.msDest);audioEl.srcObject=AU.msDest.stream;
+}
+/* 아이폰·아이패드(모든 브라우저가 사파리 엔진)는 <audio> 다리로 보내면 소리가 아예 안 난다 → 아이폰만 스피커로 바로 */const IS_IOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));const DIRECT_OUT=IS_IOS||!(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent))||matchMedia("(pointer:coarse)").matches);
+async function playChannel(id){
+  const ch=CH[id-1];if(!ch)return;if(NO_AUDIO){noAudio();return false}const gen=++AU.gen;
+  ensureCtx();ensureRoute();if(AU.ctx.state!=="running")await AU.ctx.resume().catch(e=>diagNote("채널 깨우기",e));
+  if(gen!==AU.gen)return true;
+  if(AU.curId===id&&AU.cur)return true;
+  if(AU.cur){AU.cur.stop();AU.cur=null}
+  setNp("준비 중…","CH.00"+id);
+  await new Promise(r=>setTimeout(r,30));
+  if(gen!==AU.gen||AU.ctx.state!=="running")return true;
+  const built=buildChannel(ch);AU.cur=built;AU.curId=id;leanFlush();
+  const t=AU.ctx.currentTime;built.out.gain.setValueAtTime(0.0001,t);built.out.gain.setValueAtTime(0.0001,t+0.45);built.out.gain.linearRampToValueAtTime(built.trim,t+2.4);
+  setNp("▶ "+ch.full,null);$("#sbplay").textContent="정지";mediaSession(ch);renderChans();return true;
+}
+function stopAll(){AU.gen=(AU.gen||0)+1;if(AU.cur){AU.cur.stop();AU.cur=null}AU.curId=0;leanFlush();clearSleepTimer(false);setNp("■ 정지됨 — 청취방에서 채널을 고르십시오",null,true);$("#sbplay").textContent="재생";renderChans()}
+function setNp(txt,sub,raw){const el=$("#npline");if(raw){el.textContent=txt;return}el.textContent="";el.append(txt+(sub?" ":""));if(sub){const b=document.createElement("b");b.textContent=sub;el.append(b)}}
+function mediaSession(ch){try{if(!("mediaSession" in navigator))return;navigator.mediaSession.metadata=new MediaMetadata({title:ch.full,artist:"심야접속 · SleepingBag"});navigator.mediaSession.setActionHandler("play",()=>playChannel(AU.curId||1));navigator.mediaSession.setActionHandler("pause",()=>stopAll());navigator.mediaSession.setActionHandler("stop",()=>stopAll())}catch(e){}}
+
+/* 모뎀 접속음 v3 — 선배가 녹음한 실제 모뎀(16.4초)을 0.1초 단위로 분석해 같은 타임라인·주파수로 합성 */
+function modemPlay(){
+  ensureCtx();const c=AU.ctx;if(c.state==="suspended")c.resume().catch(()=>{});
+  const t0=c.currentTime+0.08,out=c.createGain();out.gain.value=0.55;out.connect(AU.master);
+  const env=(g,s,d,a,at)=>{at=at||0.012;g.gain.setValueAtTime(0,t0+s);g.gain.linearRampToValueAtTime(a,t0+s+at);g.gain.setValueAtTime(a,t0+s+d-at);g.gain.linearRampToValueAtTime(0,t0+s+d)};
+  const tone=(f,s,d,a,type)=>{const o=c.createOscillator(),g=c.createGain();o.type=type||"sine";o.frequency.value=f;env(g,s,d,a);o.connect(g).connect(out);o.start(t0+s);o.stop(t0+s+d+0.03)};
+  const nsrc=(s,d)=>{const n=c.createBufferSource();n.buffer=getBuffer("pink");n.loop=true;n.start(t0+s,Math.random()*20);n.stop(t0+s+d+0.1);return n};
+  /* 잡음으로 주파수를 흔드는 반송파 — 녹음의 720/930Hz 워블과 3360Hz 쉿의 정체 */
+  const fm=(f,s,d,a,dev,amf)=>{const o=c.createOscillator();o.frequency.value=f;const m=nsrc(s,d);const lp=c.createBiquadFilter();lp.type="lowpass";lp.frequency.value=amf||60;const mg=c.createGain();mg.gain.value=dev;m.connect(lp);lp.connect(mg);mg.connect(o.frequency);const g=c.createGain();env(g,s,d,a,0.03);const am=nsrc(s,d);const alp=c.createBiquadFilter();alp.type="lowpass";alp.frequency.value=180;const ag=c.createGain();ag.gain.value=a*2.5;am.connect(alp);alp.connect(ag);ag.connect(g.gain);o.connect(g).connect(out);o.start(t0+s);o.stop(t0+s+d+0.05)};
+  const warble=(s,d,a)=>{fm(720,s,d,a,900);fm(930,s,d,a*0.8,900)};
+  const hiss=(s,d,a)=>{fm(3360,s,d,a*0.7,2200,90);const n=nsrc(s,d);const bp=c.createBiquadFilter();bp.type="bandpass";bp.frequency.value=3380;bp.Q.value=6;const g=c.createGain();env(g,s,d,a*1.6,0.05);n.connect(bp).connect(g).connect(out)};
+  /* 1 DTMF 0131033 (0.1초 on / 0.1초 off) */ const DT={0:[941,1336],1:[697,1209],3:[697,1477]};"0131033".split("").forEach((d,i)=>{const s=0.3+i*0.2;tone(DT[d][0],s,0.1,0.1);tone(DT[d][1],s,0.1,0.1)});
+  /* 2 정적 0.5초 → 1200Hz 반송파 0.9초 (끝에 430Hz) */ tone(1203,2.2,0.9,0.05);tone(430,2.9,0.2,0.09);
+  /* 3 1550Hz 강타 → 1800+2400 쌍음 → 750Hz → 3300대 묶음 */ tone(1550,3.1,0.2,0.22);tone(1800,3.3,0.2,0.08);tone(2400,3.3,0.2,0.06);tone(1390,3.5,0.1,0.05);tone(750,3.5,0.3,0.15);[3300,3453,3750].forEach(f=>tone(f,3.9,0.3,0.045));tone(1800,4.2,0.6,0.07);tone(2400,4.3,0.3,0.06);
+  /* 4 워블 2.0초 → 쉿 2.0초 → 워블 2.9초 (V.32 트레이닝) */ warble(4.8,2.0,0.1);hiss(6.8,2.0,0.075);warble(8.8,2.9,0.1);
+  /* 5 쌍음 → 750Hz 강타 + 3300대 → 쌍음 → 쉿 1.8초 → 뚝 */ tone(1800,11.7,0.2,0.08);tone(2400,11.7,0.2,0.06);tone(750,11.9,0.3,0.22);tone(3300,11.9,0.3,0.04);tone(750,12.2,0.4,0.1);[3300,3453,3156].forEach(f=>tone(f,12.2,0.4,0.035));tone(1800,12.6,0.4,0.08);tone(2400,12.6,0.4,0.06);hiss(13.0,1.8,0.095);
+  return 15.0;
+}
+/* 첫 화면부터 파도: 브라우저가 허락하면 바로, 아니면 첫 터치에 */
+function ensureRoute(){if(!AU.ctx||AU.routed||AU.direct||AU.routing)return;AU.routing=true;audioEl.play().then(()=>{AU.routed=true;AU.routing=false}).catch(()=>{AU.routing=false;if(!AU.direct){try{AU.analyser.connect(AU.ctx.destination)}catch(e){}AU.direct=true}armRouteRetry()})}
+function armRouteRetry(){if(AU.retryArmed)return;AU.retryArmed=true;const f=()=>{removeEventListener("pointerdown",f,true);AU.retryArmed=false;if(!AU.ctx||AU.routed||!AU.curId)return;audioEl.play().then(()=>{AU.routed=true;if(AU.direct){try{AU.analyser.disconnect(AU.ctx.destination)}catch(e){}AU.direct=false}}).catch(()=>armRouteRetry())};addEventListener("pointerdown",f,true)}
+audioEl.addEventListener("pause",()=>{if(AU.curId&&AU.routed){AU.routed=false;armRouteRetry();document.addEventListener("visibilitychange",function v(){if(!document.hidden){document.removeEventListener("visibilitychange",v);if(AU.curId&&!AU.routed)audioEl.play().then(()=>{AU.routed=true}).catch(()=>{})}})}});
+/* 다른 앱(스레드·전화)에서 돌아왔을 때만: 멈춘 맥락을 깨우고, 출력 스트림이 죽어 있으면 그때 한 번만 새로 깐다. 재생 중(모뎀 포함)에는 건드리지 않는다 */
+let audHiddenAt=0;document.addEventListener("visibilitychange",()=>{if(document.hidden){audHiddenAt=Date.now();return}if(!AU.ctx||!AU.curId||Date.now()-audHiddenAt<1500)return;setTimeout(()=>{if(AU.ctx.state!=="running")AU.ctx.resume().catch(()=>{});const tr=audioEl.srcObject&&audioEl.srcObject.getAudioTracks&&audioEl.srcObject.getAudioTracks()[0];if(AU.msDest&&(!tr||tr.readyState==="ended")){try{AU.analyser.disconnect(AU.msDest)}catch(e){}AU.msDest=AU.ctx.createMediaStreamDestination();AU.analyser.connect(AU.msDest);audioEl.srcObject=AU.msDest.stream}if(audioEl.paused&&AU.routed===false)audioEl.play().then(()=>{AU.routed=true}).catch(()=>armRouteRetry())},400)});
+function tryAutoplay(){
+  if(AU.curId||IS_IOS)return;try{ensureCtx()}catch(e){diagNote("첫 화면",e);return}
+  if(AU.ctx.state==="running"){ensureRoute();playChannel(1);return}
+  /* 브라우저가 허락하면(자주 쓰는 사이트) 여기서 바로 켜진다. 허락하지 않으면 손대지 않는다 — 모뎀 소리는 혼자 들려야 하니까. */
+  AU.ctx.resume().then(()=>{if(AU.ctx.state==="running"&&!AU.curId&&curView==="intro"&&!bootTimers.length&&!booted){ensureRoute();playChannel(1)}}).catch(()=>{});
+}
+
+/* 취침 타이머 — 오디오 자동화라 화면이 꺼져도 정확 */
+const TIMER_STEPS=[0,30,60,120,480];let timerIdx=0,timerEndAt=0,timerTick=null;
+function cycleTimer(){timerIdx=(timerIdx+1)%TIMER_STEPS.length;applyTimer()}
+function applyTimer(){
+  const mins=TIMER_STEPS[timerIdx];clearSleepTimer(true);const b=$("#timerbtn");
+  if(!mins){b.textContent="끄지 않음";$("#timernote").textContent="";return}
+  b.textContent=mins>=60?(mins/60)+"시간":mins+"분";
+  if(!AU.ctx){$("#timernote").textContent="재생을 시작하면 적용됩니다";return}
+  timerEndAt=Date.now()+mins*60000;const t=AU.ctx.currentTime,end=t+mins*60,fade=Math.min(120,mins*30);
+  AU.timerGain.gain.setValueAtTime(1,Math.max(t,end-fade));AU.timerGain.gain.linearRampToValueAtTime(0.0001,end);
+  $("#timernote").textContent="끝날 때 2분에 걸쳐 잦아듭니다";
+  timerTick=setInterval(()=>{if(document.hidden)return;const left=timerEndAt-Date.now();if(left<=0){stopAll();return}$("#timerleft").textContent="소등까지 "+pad(Math.floor(left/3600000))+":"+pad(Math.floor(left/60000)%60)+":"+pad(Math.floor(left/1000)%60)},1000);
+}
+function clearSleepTimer(keep){if(timerTick){clearInterval(timerTick);timerTick=null}$("#timerleft").textContent="";timerEndAt=0;if(AU.ctx){const t=AU.ctx.currentTime;AU.timerGain.gain.cancelScheduledValues(t);AU.timerGain.gain.setValueAtTime(1,t)}if(!keep){timerIdx=0;$("#timerbtn").textContent="끄지 않음";$("#timernote").textContent=""}}
+function vuLoop(){
+  if(AU.analyser&&!REDUCED&&!document.hidden&&AU.curId){const d=new Uint8Array(AU.analyser.frequencyBinCount);AU.analyser.getByteFrequencyData(d);const edges=[1,3,6,12,24,48,110];const bars="▁▂▃▄▅▆▇";let s="";if(!vuLoop.lv)vuLoop.lv=[0,0,0,0,0,0];if(!vuLoop.mx)vuLoop.mx=[1,1,1,1,1,1];
+    /* 띠마다 느린 평균을 기준으로 순간 편차를 키워서 보여준다 — 꾸준한 소음도 꽉 차지 않고 출렁인다 */
+    for(let i=0;i<6;i++){let a=0,n=0;for(let b=edges[i];b<edges[i+1]&&b<d.length;b++){a+=d[b];n++}a=n?a/n:0;vuLoop.mx[i]=vuLoop.mx[i]<=1?a:vuLoop.mx[i]*0.96+a*0.04;const dev=(a-vuLoop.mx[i])/Math.max(vuLoop.mx[i],12);const lv=Math.max(0.04,Math.min(1,0.42+dev*4.2+(i%2?0.04:-0.04)));vuLoop.lv[i]=lv>vuLoop.lv[i]?lv:vuLoop.lv[i]*0.55+lv*0.45;s+="<i>"+bars[Math.max(0,Math.min(6,Math.round(vuLoop.lv[i]*6.4)))]+"</i>"}$("#vu").innerHTML=s}
+  else $("#vu").innerHTML=AU.curId?"<i>♪</i>":"";
+  setTimeout(()=>requestAnimationFrame(vuLoop),90);
+}
+
+/* ============ 화면 전환 ============ */
+const VIEWS=["intro","main","sound","support","help"];
+let curView="intro";
+/* 안드로이드 뒤로가기.
+   1) CloseWatcher: 크롬이 뒤로가기를 히스토리가 아니라 이 감시자에게 먼저 준다. 하나 쓰면 곧바로 새로 세운다.
+   2) 예비로 히스토리 칸: 크롬은 '손짓 없이' 쌓인 칸을 건너뛰므로, 손이 닿을 때마다 딱 한 칸만 쌓는다(한 손짓에 여러 칸을 쌓으면 그 칸들이 건너뛸 칸이 되어 앱이 꺼지던 원인). */
+const NAV={stack:[],depth:0,exiting:false,wanted:"",cw:null};
+function pushEntry(v){if(NAV.stack[NAV.stack.length-1]!==v)NAV.stack.push(v)}
+function armWatcher(){if(NAV.exiting||NAV.cw||typeof CloseWatcher!=="function")return;try{const w=new CloseWatcher();w.onclose=()=>{if(NAV.cw===w)NAV.cw=null;if(NAV.exiting)return;onBack();setTimeout(armWatcher,0)};NAV.cw=w}catch(e){}}
+function armBack(){if(NAV.exiting)return;armWatcher();if(NAV.depth<8){try{history.pushState({sb:1},"");NAV.depth++}catch(e){}}}
+["pointerup","keydown"].forEach(t=>addEventListener(t,armBack,true));
+armWatcher();
+function editorOpen(){return $("#sheet").classList.contains("on")}
+function closeOverlays(){closeSheet()}
+function askExit(){openSheet('<h3>나가시겠습니까?</h3><p class="note">소리는 멈춥니다. 내일 밤에도 회선은 열려 있습니다.</p><div class="acts"><button id="exityes">예, 나갑니다</button><button class="pri" id="sheetclose">아니오, 더 있을게요</button></div>');$("#sheetclose").addEventListener("click",closeSheet);
+  $("#exityes").addEventListener("click",()=>{closeSheet();stopAll();NAV.exiting=true;if(NAV.cw){try{NAV.cw.destroy()}catch(e){}NAV.cw=null}const d=NAV.depth;try{history.go(-d-1)}catch(e){}
+    /* 앞 페이지가 없어 못 나간 경우: 완충 항목만 걷어 첫 항목에 세워 두면 다음 뒤로가기가 곧장 나간다 */
+    setTimeout(()=>{if(NAV.exiting){if(d>0){try{history.go(-d)}catch(e){}}NAV.depth=0;toast("뒤로가기를 한 번 더 누르면 나갑니다.");setTimeout(()=>{NAV.exiting=false},4000)}},500)})}
+function onBack(){
+  if(editorOpen()){closeOverlays();return}
+  if(curView==="intro"||NAV.stack.length<=1){NAV.stack=["intro"];if(curView!=="intro"){show("intro",true);if(!NAV.cw&&NAV.depth===0&&typeof CloseWatcher!=="function")toast("여기서 한 번 더 누르면 나갑니다.")}else askExit();return}
+  NAV.stack.pop();const prev=NAV.stack[NAV.stack.length-1]||"main";show(prev,true)}
+/* 앱 안의 '나가기'·ESC: 완충 항목이 있으면 뒤로가기와 같은 길로, 없으면 바로 한 단계 위로 */
+function goUp(){if(NAV.depth>0){try{history.back();return}catch(e){}}onBack()}
+addEventListener("popstate",()=>{
+  NAV.depth=Math.max(0,NAV.depth-1);if(!(history.state&&history.state.sb))NAV.depth=0;
+  if(NAV.exiting){if(NAV.depth===0)NAV.exiting=false;return}
+  onBack();
+});
+function show(v,pop){
+  if(!VIEWS.includes(v))v="main";
+  $$(".view").forEach(x=>x.classList.remove("on"));$("#view-"+v).classList.add("on");curView=v;
+  if(!pop)pushEntry(v);
+  if(v==="intro")resetIntro();
+  if(v==="main")tick();
+  window.scrollTo(0,0);
+}
+document.addEventListener("click",e=>{
+  const g=e.target.closest("[data-go]");if(g){const v=g.dataset.go;if((v==="main"||v==="intro")&&NAV.stack.length>1&&NAV.stack[NAV.stack.length-2]===v){goUp();return}show(v);return}
+});
+document.addEventListener("keydown",e=>{
+  if(curView==="intro")return;
+  if(e.target.matches("input,textarea,select")&&e.key!=="Escape")return;
+  if(e.key==="Escape"){if(e.isComposing)return;if(NAV.cw)return;/* 크롬은 ESC도 감시자에게 준다 — 두 번 물러나지 않게 */if(editorOpen())closeOverlays();else if(NAV.stack.length>1)goUp();return}
+  const n=parseInt(e.key,10);if(!n||n<1||n>9)return;
+  if(curView==="main"&&n<=3)show(["sound","support","help"][n-1]);
+  else if(curView==="sound"&&n<=5)playChannel(n);
+});
+
+/* ============ 첫 화면 → 모뎀 → 접속 ============ */
+let booted=false,bootTimers=[],canSkip=false,dialedWithSound=false;
+const LOG_FULL=[[0,"ATDT 0131033"],[0.3,"DIALING ........"],[2.2,"CARRIER DETECTED"],[3.1,"HANDSHAKE  V.32bis"],[4.8,"TRAINING ............"],[8.8,"EQUALIZING ......"],[11.7,"PROTOCOL: LAP-M   COMPRESSION: V.42bis"],[14.9,"CONNECT 14400"],[15.5,"심야접속 BBS에 오신 것을 환영합니다.\n회선은 느리고, 밤은 깁니다."]];
+const LOG_QUIET=[[0,"ATDT 0131033  (무음)"],[0.5,"CONNECT 14400"],[1.0,"심야접속 BBS에 오신 것을 환영합니다.\n회선은 느리고, 밤은 깁니다."]];
+function runConnect(withSound){
+  if(bootTimers.length||booted)return;const log=$("#introlog");log.hidden=false;log.textContent="";log.innerHTML="";$("#dialbtn").disabled=true;$("#quietbtn").disabled=true;
+  try{ensureCtx();ensureRoute();if(AU.ctx.state!=="running")AU.ctx.resume().catch(e=>diagNote("깨우기",e));if(IS_IOS){const b=AU.ctx.createBuffer(1,1,AU.ctx.sampleRate),u=AU.ctx.createBufferSource();u.buffer=b;u.connect(AU.ctx.destination);u.start(0)}}catch(e){diagNote("접속 준비",e)}
+  let total=0;if(withSound){try{total=modemPlay()}catch(e){total=0;diagNote("모뎀",e)}}
+  dialedWithSound=!!(withSound&&total);
+  const lines=withSound&&total?LOG_FULL:LOG_QUIET;const scale=REDUCED?0.35:1;
+  lines.forEach(([t,l],i)=>bootTimers.push(setTimeout(()=>{const last=i===lines.length-1;const sp=document.createElement("span");sp.textContent=(log.childNodes.length?(last?"\n\n":"\n"):"")+l;if(last)sp.className="brite";log.append(sp);if(last){canSkip=true;$("#skiphint").hidden=false}},t*1000*scale)));
+  const end=(lines[lines.length-1][0]+(withSound?4.8:3.0))*1000*scale;
+  bootTimers.push(setTimeout(finishBoot,end));
+}
+function resetIntro(){if(AU.curId)stopAll();bootTimers.forEach(clearTimeout);bootTimers=[];booted=false;canSkip=false;dialedWithSound=false;const lg=$("#introlog");lg.hidden=true;lg.textContent="";$("#skiphint").hidden=true;$("#dialbtn").disabled=false;$("#quietbtn").disabled=false;$("#linestate").textContent="대기"}
+function afterBoot(){const h=NAV.wanted;NAV.wanted="";show("main");if(h&&h!=="main"&&VIEWS.includes(h)&&h!=="intro")show(h)}
+function finishBoot(){
+  if(booted)return;booted=true;bootTimers.forEach(clearTimeout);bootTimers=[];$("#linestate").textContent="접속됨 14400bps";
+  if(!AU.curId){try{ensureRoute();playChannel(1)}catch(e){}}
+  afterBoot();
+}
+$("#dialbtn").addEventListener("click",()=>runConnect(true));
+$("#quietbtn").addEventListener("click",()=>runConnect(false));
+$("#view-intro").addEventListener("click",e=>{if(canSkip&&!booted&&!e.target.closest("button"))finishBoot()});
+
+/* ============ 청취방 ============ */
+function renderChans(){
+  const box=$("#chanlist");if(!box)return;box.textContent="";
+  CH.forEach(ch=>{
+    const on=AU.curId===ch.id;const d=document.createElement("div");d.className="chan"+(on?" playing":"");
+    d.innerHTML='<div class="row1"><span class="chno">CH.00'+ch.id+'</span><span class="chname">'+esc(ch.full)+'</span><span class="fee">이용료 0원</span></div><p class="desc">'+esc(ch.desc)+'</p><p class="fit">'+esc(ch.fit)+'</p>'+
+      '<div class="act"><button data-ch="'+ch.id+'">'+(on?"지금 듣는 중":"청취")+'</button>'+(on?'<span class="state">▶ 송출 중</span>':"")+"</div>";
+    box.append(d);
+  });
+  box.querySelectorAll("[data-ch]").forEach(b=>b.addEventListener("click",()=>playChannel(+b.dataset.ch)));
+}
+$("#sbplay").addEventListener("click",()=>{AU.curId?stopAll():playChannel(1)});
+const volEl=$("#vol");volEl.value=ls.get("vol",35);
+volEl.addEventListener("input",()=>{ls.set("vol",+volEl.value);if(AU.master)AU.master.gain.setTargetAtTime(volCurve(+volEl.value),AU.ctx.currentTime,0.05)});
+$("#timerbtn").addEventListener("click",cycleTimer);
+const LUM_NAMES=["어둡게","보통","밝게"];let lum=ls.get("lum",1);
+function applyLum(){document.documentElement.setAttribute("data-lum",String(lum));$("#lumbtn").textContent=LUM_NAMES[lum];ls.set("lum",lum)}
+$("#lumbtn").addEventListener("click",()=>{lum=(lum+1)%3;applyLum()});
+
+/* ============ 겹창 ============ */
+function openSheet(html){$("#sheetin").innerHTML=html;$("#sheet").classList.add("on");$("#scrim").classList.add("on")}
+function closeSheet(){$("#sheet").classList.remove("on");$("#scrim").classList.remove("on")}
+$("#scrim").addEventListener("click",closeSheet);
+let toastTimer=null;function toast(msg){let el=$("#toast");if(!el){el=document.createElement("div");el.id="toast";document.body.append(el)}el.textContent=msg;el.classList.add("on");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("on"),3200)}
+const EVIDENCE=[["바다 소리",'("ocean sounds" OR "wave sounds" OR "sea sounds" OR "surf noise" OR "coastal soundscape") AND (sleep OR insomnia OR relaxation)'],
+ ["빗소리",'("rain sounds" OR "rainfall noise" OR "rain sound" OR "white noise" OR "nature sounds") AND ("sleep onset" OR insomnia OR sleep)'],
+ ["원음 (1/f)",'("pink noise" OR "1/f noise" OR "1/f fluctuation" OR "acoustic stimulation" OR "slow-wave sleep") AND (sleep OR memory)'],
+ ["밤바람",'("wind sounds" OR "wind noise" OR "nature sounds" OR "natural soundscape" OR "environmental sounds") AND (relaxation OR sleep OR parasympathetic)'],
+ ["모닥불",'("campfire" OR "hearth fire" OR "fire sounds" OR "crackling fire" OR "fireplace") AND (relaxation OR "blood pressure" OR sleep)']];
+function openEvidence(){openSheet('<h3>논문 읽다 주무세요, 그럼.</h3><p class="note">각 채널의 소리마다 수면에 도움이 된다는 주장의 근거가 되는 논문들을 스칼라에서 찾습니다. 대부분 영어고, 읽다 보면 스르르 잠이 옵니다.</p><div class="evrow">'+EVIDENCE.map(([t],i)=>'<button class="evlink" data-i="'+i+'">'+esc(t)+'</button>').join("")+'</div><div class="acts"><button id="sheetclose">닫기</button></div>');$("#sheetclose").addEventListener("click",closeSheet);$$("#sheetin .evlink").forEach(b=>b.addEventListener("click",()=>{const q=EVIDENCE[+b.dataset.i][1];const u="https://scholar.google.com/scholar?hl=ko&as_sdt=0,5&q="+encodeURIComponent(q);const a=document.createElement("a");a.href=u;a.target="_blank";a.rel="noopener";document.body.append(a);a.click();a.remove()}))}
+{const b=$("#awakebtn");if(b)b.addEventListener("click",openEvidence)}
+
+/* ============ 함께 한 시간 ============
+   단조 시계(performance.now)로 재서 휴대폰 시각을 돌려도 늘지 않는다. 저장값은 SHA-256 서명으로 봉인하고(손으로 고치면 0부터),
+   이 기계 안에만 남는다 */
+let leanFrom=performance.now(),leanOK=true;const LEAN_SALT="sb-lean-v1";
+function leanActive(){return !document.hidden||!!AU.curId}
+function devKey(){let d=ls.get("dev","");if(!d){d=Math.random().toString(36).slice(2)+Date.now().toString(36);ls.set("dev",d)}return d}
+async function leanSign(ms){try{const buf=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(Math.floor(ms)+"|"+LEAN_SALT+"|"+devKey()));return[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,"0")).join("")}catch(e){return""}}
+async function leanVerify(){const ms=ls.get("lean",0),sig=ls.get("leansig","");if(!ms)return;const s=await leanSign(ms);if(s&&sig&&s!==sig){ls.set("lean",0);leanOK=false}else if(s&&!sig)ls.set("leansig",s)}
+function leanFlush(){const now=performance.now();if(leanFrom!=null){const d=now-leanFrom;if(d>0)ls.set("lean",Math.floor(ls.get("lean",0)+Math.min(d,600000)))}leanFrom=leanActive()?now:null;leanSign(ls.get("lean",0)).then(s=>{if(s)ls.set("leansig",s)})}
+function leanTotal(){return ls.get("lean",0)+(leanFrom!=null?performance.now()-leanFrom:0)}
+function leanText(){const tot=leanTotal();const hh=Math.floor(tot/3600000),m=Math.floor(tot/60000)%60,s=Math.floor(tot/1000)%60;return hh+"시간 "+m+"분 "+pad(s)+"초"}
+function leanLine(){return "당신이 심야접속과 함께 한 시간 총: "+leanText()+" (이 단말기 기준)"+(leanOK?"":" · 저장된 시간이 손상되어 0부터 다시 셉니다")}
+setInterval(()=>{if(leanActive())leanFlush()},30000);addEventListener("pagehide",leanFlush);leanVerify();
+
+/* ============ 시계/상태 ============ */
+const t0=Date.now();
+function tick(){
+  if(document.hidden)return;const now=new Date();$("#clock").textContent=fmtClock(now);
+  const el=Date.now()-t0;$("#elapsed").textContent=pad(Math.floor(el/3600000))+":"+pad(Math.floor(el/60000)%60)+":"+pad(Math.floor(el/1000)%60);
+  $$(".leanline").forEach(x=>{x.textContent=leanLine()});
+}
+setInterval(tick,1000);
+document.addEventListener("visibilitychange",()=>{leanFlush();if(!document.hidden){tick();if(timerEndAt&&Date.now()>=timerEndAt)stopAll()}});
+
+/* ============ 시작 ============ */
+applyLum();renderChans();vuLoop();tick();tryAutoplay();
+if(NO_AUDIO){const n=$("#noaudio");n.innerHTML=NOAUDIO_HTML;n.hidden=false}
+try{new ResizeObserver(()=>{const sb=$("#statusbar");document.documentElement.style.setProperty("--sbh",(sb.offsetHeight?sb.offsetHeight+32:120)+"px")}).observe($("#statusbar"))}catch(e){}
+NAV.wanted=location.hash.replace("#","");try{if(location.hash)history.replaceState(history.state,"",location.pathname+location.search)}catch(e){}
+$$(".view").forEach(x=>x.classList.remove("on"));$("#view-intro").classList.add("on");curView="intro";pushEntry("intro");
+</script>
+<script>
+/* 진단 화면 — https://…/?diag 로 열었을 때만 뜬다. 평소 화면에는 아무 영향 없음 */
+(function(){
+  if(!/[?&]diag\b/.test(location.search))return;
+  const wrap=document.createElement("div");
+  wrap.style.cssText="position:fixed;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top,0px));z-index:999;background:#05080c;border:1px solid #45545f;color:#c5c5c5;font:12px/1.5 ui-monospace,Menlo,monospace";
+  wrap.innerHTML='<div style="display:flex;gap:6px;flex-wrap:wrap;padding:6px 8px;border-bottom:1px solid #272727"><b style="color:#7b8fa6;margin-right:auto">진단</b><button id="dg-beep">삐 ① 웹오디오</button><button id="dg-wav">삐 ② 오디오 태그</button><button id="dg-copy">복사</button><button id="dg-fold">접기</button></div><pre id="dg-out" style="margin:0;padding:8px 10px;max-height:34vh;overflow:auto;white-space:pre-wrap;word-break:break-all"></pre>';
+  document.body.appendChild(wrap);
+  const out=wrap.querySelector("#dg-out");let beep="—",wav="—";
+  function line(){
+    const v=(document.body.innerHTML.match(/심야접속 v[0-9.]+/)||["?"])[0];
+    const as=navigator.audioSession?navigator.audioSession.type:"없음";
+    const c=AU.ctx?(AU.ctx.state+" · "+AU.ctx.sampleRate+"Hz · 지연 "+(AU.ctx.baseLatency!=null?AU.ctx.baseLatency.toFixed(3):"?")):"아직 없음";
+    out.textContent=[v,"아이폰: "+IS_IOS+" · 바로출력: "+DIRECT_OUT+" · 출력길: "+(AU.ctx?(AU.direct?"바로":"다리"):"—"),
+      "재생 모드(audioSession): "+as,"소리 장치(맥락): "+c,"재생 중 채널: "+(AU.curId||"없음")+" · 모뎀 로그: "+(dialedWithSound?"소리 있음":"무음/아직"),
+      "삐①: "+beep,"삐②: "+wav,"── 오류 ("+DIAG.length+") ──"].concat(DIAG.length?DIAG:["없음"]).join("\n")+"\n\n"+navigator.userAgent;
+  }
+  setInterval(line,500);line();
+  wrap.querySelector("#dg-beep").onclick=()=>{
+    try{const C=window.AudioContext||window.webkitAudioContext;const c=new C();const s0=c.state;c.resume().catch(e=>{beep+=" / 깨우기 실패 "+e.name});
+      const o=c.createOscillator(),g=c.createGain();g.gain.value=0.25;o.frequency.value=440;o.connect(g).connect(c.destination);o.start();o.stop(c.currentTime+0.8);
+      beep="새 맥락 "+s0;setTimeout(()=>{beep+=" → "+c.state;c.close().catch(()=>{})},1200)}catch(e){beep="오류 "+e.name+" "+e.message}
+  };
+  wrap.querySelector("#dg-wav").onclick=()=>{
+    try{const sr=22050,n=Math.floor(sr*0.7),buf=new ArrayBuffer(44+n*2),dv=new DataView(buf);const w=(o,t)=>{for(let i=0;i<t.length;i++)dv.setUint8(o+i,t.charCodeAt(i))};
+      w(0,"RIFF");dv.setUint32(4,36+n*2,true);w(8,"WAVEfmt ");dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);dv.setUint32(24,sr,true);dv.setUint32(28,sr*2,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);w(36,"data");dv.setUint32(40,n*2,true);
+      for(let i=0;i<n;i++)dv.setInt16(44+i*2,Math.sin(i/sr*2*Math.PI*660)*9000*Math.min(1,(n-i)/2000),true);
+      const a=new Audio(URL.createObjectURL(new Blob([buf],{type:"audio/wav"})));a.play().then(()=>{wav="재생됨"}).catch(e=>{wav="실패 "+e.name+" "+e.message})}catch(e){wav="오류 "+e.name+" "+e.message}
+  };
+  wrap.querySelector("#dg-copy").onclick=()=>{line();const t=out.textContent;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{beep=beep},()=>{const r=document.createRange();r.selectNodeContents(out);const sel=getSelection();sel.removeAllRanges();sel.addRange(r)})};
+  wrap.querySelector("#dg-fold").onclick=e=>{out.hidden=!out.hidden;e.target.textContent=out.hidden?"펼치기":"접기"};
+})();
+</script>
+<script>if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));</script>
+</body>
+</html>
