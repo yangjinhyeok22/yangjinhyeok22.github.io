@@ -1,5 +1,5 @@
 /* 심야접속 오프라인 캐시: 화면은 늘 새 판을 먼저 받고, 안 되면 저장해 둔 판을 연다. 글꼴은 한 번 받으면 저장본을 쓴다 */
-const C="simya-v33-01";
+const C="simya-v33-03";
 const CORE=["./","./index.html","./manifest.webmanifest","./icon-192.png","./icon-512.png"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(CORE)));self.skipWaiting()});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim()))});

@@ -13,8 +13,11 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>html,body{background:#000}</style>
+<style>#splash{display:none}.launch #splash{display:block;position:fixed;inset:0;z-index:300;background:#000;transition:opacity .35s ease;animation:splash-bye .35s ease 3s forwards}@keyframes splash-bye{to{opacity:0;visibility:hidden}}#splash.out{opacity:0;pointer-events:none}#splash svg{position:absolute;left:50%;top:calc(50% - 16px);margin:-64px 0 0 -64px}#splash.blink #spc{visibility:hidden}#splash p{position:absolute;left:16px;right:16px;bottom:48px;margin:0;text-align:center;color:#fff;font-size:24px;line-height:1.33;font-family:sans-serif-condensed,"Roboto Condensed",system-ui,sans-serif}</style>
+<script>try{if(matchMedia("(display-mode: standalone)").matches||navigator.standalone||/[?&]splash\b/.test(location.search))document.documentElement.classList.add("launch")}catch(e){}</script>
 </head>
 <body>
+<div id="splash" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="85.333 85.333 341.333 341.333" width="128" height="128"><filter id="spg" filterUnits="userSpaceOnUse" x="0" y="0" width="512" height="512"><feGaussianBlur stdDeviation="15.5"/></filter><defs><path id="spm" d="M261.28 123.95A96.66 96.66 0 1 0 314.19 298.14A95.06 95.06 0 0 1 261.28 123.95Z"/></defs><use href="#spm" fill="rgb(57.8,73.8,95.7)" filter="url(#spg)"/><use href="#spm" fill="#DFE7F2"/><path d="M206.54 353.81 200.82 374.33H212.26ZM203.27 349.03H209.85L222.12 389.12H216.51L213.55 378.68H199.51L196.61 389.12H190.99ZM224.38 349.03H254.96V353.6H242.42V389.12H236.97V353.6H224.38ZM267.93 384.67Q274.78 384.67 277.5 381.3Q280.21 377.93 280.21 369.12Q280.21 360.23 277.51 356.86Q274.81 353.49 267.93 353.49H265.36V384.67ZM268.04 349.03Q277.23 349.03 281.58 353.92Q285.93 358.81 285.93 369.12Q285.93 379.38 281.58 384.25Q277.23 389.12 268.04 389.12H259.9V349.03ZM290.6 349.03H321.19V353.6H308.65V389.12H303.2V353.6H290.6Z" fill="#7B8FA6"/><rect id="spc" x="329" y="345" width="27" height="52" fill="#7B8FA6"/></svg><p>수면 PC통신 — 심야접속</p></div>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nanum+Gothic+Coding:wght@400;700&display=swap">
 <style>
 /* 레이아웃: 단말 1열(첫 화면·메뉴·청취방·후원·도움말) + 아래 상태줄 + 슬리핑백 테두리. 의도적 단일 다크 테마. */
@@ -234,7 +237,7 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
     </div>
     <p class="note faint leanline" style="margin-top:10px"></p>
     <hr>
-    <p class="note faint">글꼴: 나눔고딕코딩. 수면 PC통신 · 심야접속 v33.01<br>Built with Claude</p>
+    <p class="note faint">글꼴: 나눔고딕코딩. 수면 PC통신 · 심야접속 v33.03<br>Built with Claude</p>
   </div>
 </section>
 
@@ -475,12 +478,15 @@ const LOG_QUIET=[[0,"ATDT 0131033  (무음)"],[0.5,"CONNECT 14400"],[1.0,"심야
 function runConnect(withSound){
   if(bootTimers.length||booted)return;const log=$("#introlog");log.hidden=false;log.textContent="";log.innerHTML="";$("#dialbtn").disabled=true;$("#quietbtn").disabled=true;
   try{ensureCtx();ensureRoute();if(AU.ctx.state!=="running")AU.ctx.resume().catch(e=>diagNote("깨우기",e));if(IS_IOS){const b=AU.ctx.createBuffer(1,1,AU.ctx.sampleRate),u=AU.ctx.createBufferSource();u.buffer=b;u.connect(AU.ctx.destination);u.start(0)}}catch(e){diagNote("접속 준비",e)}
+  const hang=withSound&&AU.curId?(stopAll(),600):0;
+  const go=()=>{
   let total=0;if(withSound){modemDirectOn();try{total=modemPlay()}catch(e){total=0;diagNote("모뎀",e)}if(total)AU.modemEnd=performance.now()+total*1000;else modemDirectOff()}
   dialedWithSound=!!(withSound&&total);
   const lines=withSound&&total?LOG_FULL:LOG_QUIET;const scale=REDUCED?0.35:1;
   lines.forEach(([t,l],i)=>bootTimers.push(setTimeout(()=>{const last=i===lines.length-1;const sp=document.createElement("span");sp.textContent=(log.childNodes.length?(last?"\n\n":"\n"):"")+l;if(last)sp.className="brite";log.append(sp);if(last){canSkip=true;$("#skiphint").hidden=false}},t*1000*scale)));
   const end=(lines[lines.length-1][0]+(withSound?4.8:3.0))*1000*scale;
   bootTimers.push(setTimeout(finishBoot,end));
+  };if(hang)bootTimers.push(setTimeout(go,hang));else go();
 }
 function resetIntro(){if(AU.curId)stopAll();bootTimers.forEach(clearTimeout);bootTimers=[];booted=false;canSkip=false;dialedWithSound=false;const lg=$("#introlog");lg.hidden=true;lg.textContent="";$("#skiphint").hidden=true;$("#dialbtn").disabled=false;$("#quietbtn").disabled=false;$("#linestate").textContent="대기"}
 function afterBoot(){const h=NAV.wanted;NAV.wanted="";show("main");if(h&&h!=="main"&&VIEWS.includes(h)&&h!=="intro")show(h)}
@@ -550,6 +556,8 @@ setInterval(tick,1000);
 document.addEventListener("visibilitychange",()=>{leanFlush();if(!document.hidden){tick();if(timerEndAt&&Date.now()>=timerEndAt)stopAll()}});
 
 /* ============ 시작 ============ */
+/* 앱 아이콘으로 열었을 때: 시작 화면을 1.35초 보여 주며 커서를 한 번 깜빡이고 스르르 사라진다(누르면 바로 넘어감) */
+(function(){const s=$("#splash");if(!s||!document.documentElement.classList.contains("launch"))return;const end=()=>{if(s.classList.contains("out"))return;s.classList.add("out");setTimeout(()=>s.remove(),450)};s.addEventListener("click",end);requestAnimationFrame(()=>{if(!REDUCED){setTimeout(()=>s.classList.add("blink"),450);setTimeout(()=>s.classList.remove("blink"),900)}setTimeout(end,REDUCED?600:1350)})})();
 applyLum();renderChans();vuLoop();tick();tryAutoplay();
 if(NO_AUDIO){const n=$("#noaudio");n.innerHTML=NOAUDIO_HTML;n.hidden=false}
 try{new ResizeObserver(()=>{const sb=$("#statusbar");document.documentElement.style.setProperty("--sbh",(sb.offsetHeight?sb.offsetHeight+32:120)+"px")}).observe($("#statusbar"))}catch(e){}
