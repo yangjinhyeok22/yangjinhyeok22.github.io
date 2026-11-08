@@ -237,7 +237,7 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
     </div>
     <p class="note faint leanline" style="margin-top:10px"></p>
     <hr>
-    <p class="note faint">글꼴: 나눔고딕코딩. 수면 PC통신 · 심야접속 v33.03<br>Built with Claude</p>
+    <p class="note faint">글꼴: 나눔고딕코딩. 수면 PC통신 · 심야접속 v33.13<br>Built with Claude</p>
   </div>
 </section>
 
@@ -341,25 +341,32 @@ function ensureCtx(){
   AU.fx=AU.ctx.createGain();AU.fx.gain.value=0.75;AU.fx.connect(AU.comp);
   /* 휴대폰은 화면을 꺼도 이어지도록 <audio> 다리를 거치고, PC는 다리 없이 바로 스피커로 — 다리를 거치면 CPU가 바쁠 때 '뜨뜨뜨' 끊기기 쉽다 */
   if(DIRECT_OUT){AU.analyser.connect(AU.ctx.destination);AU.direct=true;AU.routed=true;return}
-  AU.msDest=AU.ctx.createMediaStreamDestination();AU.analyser.connect(AU.msDest);audioEl.srcObject=AU.msDest.stream;
+  /* 안드로이드: 끝을 두 갈래로(다리 toB, 직통 toD) — 길은 잇고 끊지 않고 이득으로만 바꾼다 */
+  AU.msDest=AU.ctx.createMediaStreamDestination();AU.toB=AU.ctx.createGain();AU.toD=AU.ctx.createGain();AU.toD.gain.value=0;AU.route=0;
+  AU.analyser.connect(AU.toB).connect(AU.msDest);AU.analyser.connect(AU.toD).connect(AU.ctx.destination);audioEl.srcObject=AU.msDest.stream;
 }
 /* 아이폰·아이패드(모든 브라우저가 사파리 엔진)는 <audio> 다리로 보내면 소리가 아예 안 난다 → 아이폰만 스피커로 바로 */const IS_IOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));const DIRECT_OUT=IS_IOS||!(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent))||matchMedia("(pointer:coarse)").matches);
 async function playChannel(id){
-  const ch=CH[id-1];if(!ch)return;if(NO_AUDIO){noAudio();return false}if(AU.modemDirect)modemDirectOff();const gen=++AU.gen;
+  const ch=CH[id-1];if(!ch)return;if(NO_AUDIO){noAudio();return false}const gen=++AU.gen;
   ensureCtx();ensureRoute();if(AU.ctx.state!=="running")await AU.ctx.resume().catch(e=>diagNote("채널 깨우기",e));
   if(gen!==AU.gen)return true;
   if(AU.curId===id&&AU.cur)return true;
-  if(AU.cur){AU.cur.stop();AU.cur=null}
+  if(AU.cur){AU.cur.stop();AU.cur=null;AU.stopAt=performance.now()}
   setNp("준비 중…","CH.00"+id);
   await new Promise(r=>setTimeout(r,30));
   if(gen!==AU.gen||AU.ctx.state!=="running")return true;
   const built=buildChannel(ch);AU.cur=built;AU.curId=id;leanFlush();
-  const t=AU.ctx.currentTime,g=built.out.gain,w=warmLeft();g.setValueAtTime(0.0001,t);
+  const t=AU.ctx.currentTime,g=built.out.gain;let w=warmLeft();g.setValueAtTime(0.0001,t);
+  /* 숨어 있으면 다리, 보이는데 다리가 차가우면 직통(숨을 때 handover). 다른 소리가 나는 중이면 0.25초 엇갈려 */
+  if(AU.toB&&!AU.direct){const busy=AU.modemDirect||performance.now()-(AU.stopAt||0)<700;AU.modemDirect=false;
+    if(document.hidden){if(AU.route!==0)setRoute(0,busy?0.25:0);AU.warmHold=false}
+    else if(w>3||(AU.route===1&&busy)){if(AU.route!==1)setRoute(1,busy?0.25:0);AU.warmHold=true;w=0}
+    else{if(AU.route!==0)setRoute(0);AU.warmHold=false}}
   if(w>3){const N=48,cv=new Float32Array(N);for(let i=0;i<N;i++){const u=i/(N-1);cv[i]=Math.max(0.0001,built.trim*u*u)}g.setValueCurveAtTime(cv,t+0.45,w)}
   else{g.setValueAtTime(0.0001,t+0.45);g.linearRampToValueAtTime(built.trim,t+2.4)}
   setNp("▶ "+ch.full,null);$("#sbplay").textContent="정지";mediaSession(ch);renderChans();return true;
 }
-function stopAll(){AU.gen=(AU.gen||0)+1;if(AU.cur){AU.cur.stop();AU.cur=null}AU.curId=0;leanFlush();clearSleepTimer(false);setNp("■ 정지됨 — 청취방에서 채널을 고르십시오",null,true);$("#sbplay").textContent="재생";renderChans()}
+function stopAll(){AU.gen=(AU.gen||0)+1;if(AU.cur){AU.cur.stop();AU.cur=null;AU.stopAt=performance.now()}AU.curId=0;leanFlush();clearSleepTimer(false);setNp("■ 정지됨 — 청취방에서 채널을 고르십시오",null,true);$("#sbplay").textContent="재생";renderChans()}
 function setNp(txt,sub,raw){const el=$("#npline");if(raw){el.textContent=txt;return}el.textContent="";el.append(txt+(sub?" ":""));if(sub){const b=document.createElement("b");b.textContent=sub;el.append(b)}}
 function mediaSession(ch){try{if(!("mediaSession" in navigator))return;navigator.mediaSession.metadata=new MediaMetadata({title:ch.full,artist:"심야접속 · SleepingBag"});navigator.mediaSession.setActionHandler("play",()=>playChannel(AU.curId||1));navigator.mediaSession.setActionHandler("pause",()=>stopAll());navigator.mediaSession.setActionHandler("stop",()=>stopAll())}catch(e){}}
 
@@ -384,14 +391,24 @@ function modemPlay(){
 /* 첫 화면부터 파도: 브라우저가 허락하면 바로, 아니면 첫 터치에 */
 /* 다리를 켠 지 얼마나 됐나: 덜 데워졌으면(30초 안) 남은 초를 돌려준다. 스피커로 바로 나가는 길은 0. 갤럭시 S23에서 앱 첫 실행 때 30초쯤 끊겼다 */
 /* 모뎀이 나는 동안만 스피커로 바로: 다리는 무음으로 데우고, 모뎀이 끝나 조용할 때 다리로 돌아간다(재생 중에는 길을 안 바꾼다) */
-function modemDirectOn(){if(!AU.ctx||!AU.msDest||AU.direct||AU.curId||AU.modemDirect)return;try{AU.analyser.disconnect(AU.msDest)}catch(e){}try{AU.hush=AU.ctx.createConstantSource();AU.hush.offset.value=0;AU.hush.connect(AU.msDest);AU.hush.start()}catch(e){AU.hush=null}AU.analyser.connect(AU.ctx.destination);AU.modemDirect=true}
-function modemDirectOff(){if(!AU.modemDirect)return;AU.modemDirect=false;try{AU.analyser.disconnect(AU.ctx.destination)}catch(e){}try{AU.analyser.connect(AU.msDest)}catch(e){}if(AU.hush){try{AU.hush.stop();AU.hush.disconnect()}catch(e){}AU.hush=null}}
+function modemDirectOn(){if(!AU.ctx||!AU.toB||AU.direct||AU.curId||AU.modemDirect)return;setRoute(1);AU.modemDirect=true}
+function modemDirectOff(){if(!AU.modemDirect)return;AU.modemDirect=false;if(!AU.warmHold)setRoute(0)}
+/* 다리는 켠 뒤 30초쯤 '뚝뚝' 끊길 수 있다 → 그동안은 직통. 숨으면 다리가 데워지는 시각에 맞춰 넘긴다(오디오 시계에 미리 걸어 둠).
+   넘기기 전에 시스템이 <audio>를 멈추면(전화 등) 바로 다리로 — 소리도 같이 멈추게 */
+function holdAt(g,t){const v=g.value;if(g.cancelAndHoldAtTime){try{g.cancelAndHoldAtTime(t)}catch(e){g.cancelScheduledValues(0)}}else g.cancelScheduledValues(0);g.setValueAtTime(v,t)}
+function setRoute(d,f){if(!AU.toB)return;const t=AU.ctx.currentTime;for(const[g,v]of[[AU.toD.gain,d],[AU.toB.gain,1-d]]){holdAt(g,t);if(f)g.linearRampToValueAtTime(v,t+f);else g.setValueAtTime(v,t)}AU.route=d;AU.switchAt=0}
+function handover(){if(!AU.warmHold||AU.modemDirect||!AU.toB||AU.direct)return;AU.warmHold=false;if(!AU.cur){setRoute(0);return}AU.route=0;
+  const n=AU.ctx.currentTime,w=warmLeft(),t=n+(w>1?w:0),d=AU.toD.gain,b=AU.toB.gain;holdAt(d,n);holdAt(b,n);
+  d.setValueAtTime(1,t);d.linearRampToValueAtTime(0,t+0.3);b.setValueAtTime(0,t+0.3);b.linearRampToValueAtTime(1,t+1.8);AU.switchAt=t+1.8;
+  if(audioEl.paused&&AU.routed)audioEl.play().catch(()=>{})}
+function resumeDirect(){if(!AU.toB||AU.direct||AU.modemDirect||!AU.cur||document.hidden)return;const t=AU.ctx.currentTime,d=AU.toD.gain,b=AU.toB.gain;
+  holdAt(b,t);b.setValueAtTime(0,t);holdAt(d,t);if(AU.route!==1)d.setValueAtTime(0,t);d.linearRampToValueAtTime(1,t+1);AU.route=1;AU.warmHold=true;AU.switchAt=0}
 const BRIDGE_WARM=30;function warmLeft(){if(!AU.msDest||AU.direct)return 0;return Math.max(0,BRIDGE_WARM-(AU.routeAt?(performance.now()-AU.routeAt)/1000:0))}
-function ensureRoute(){if(!AU.ctx||AU.routed||AU.direct||AU.routing)return;AU.routing=true;audioEl.play().then(()=>{AU.routed=true;AU.routeAt=performance.now();AU.routing=false}).catch(()=>{AU.routing=false;if(!AU.direct){try{AU.analyser.connect(AU.ctx.destination)}catch(e){}AU.direct=true}armRouteRetry()})}
-function armRouteRetry(){if(AU.retryArmed)return;AU.retryArmed=true;const f=()=>{removeEventListener("pointerdown",f,true);AU.retryArmed=false;if(!AU.ctx||AU.routed||!AU.curId)return;audioEl.play().then(()=>{AU.routed=true;AU.routeAt=performance.now();if(AU.direct){try{AU.analyser.disconnect(AU.ctx.destination)}catch(e){}AU.direct=false}}).catch(()=>armRouteRetry())};addEventListener("pointerdown",f,true)}
-audioEl.addEventListener("pause",()=>{if(AU.curId&&AU.routed){AU.routed=false;armRouteRetry();document.addEventListener("visibilitychange",function v(){if(!document.hidden){document.removeEventListener("visibilitychange",v);if(AU.curId&&!AU.routed)audioEl.play().then(()=>{AU.routed=true;AU.routeAt=performance.now()}).catch(()=>{})}})}});
+function ensureRoute(){if(!AU.ctx||AU.routed||AU.direct||AU.routing)return;AU.routing=true;audioEl.play().then(()=>{AU.routed=true;AU.routeAt=performance.now();AU.routing=false}).catch(()=>{AU.routing=false;if(!AU.direct){setRoute(1);AU.direct=true}armRouteRetry()})}
+function armRouteRetry(){if(AU.retryArmed)return;AU.retryArmed=true;const f=()=>{removeEventListener("pointerdown",f,true);AU.retryArmed=false;if(!AU.ctx||AU.routed||!AU.curId)return;resumeDirect();audioEl.play().then(()=>{AU.routed=true;AU.routeAt=performance.now();if(AU.direct){AU.direct=false;if(AU.cur&&!document.hidden)AU.warmHold=true;else setRoute(0,0.25)}}).catch(()=>armRouteRetry())};addEventListener("pointerdown",f,true)}
+audioEl.addEventListener("pause",()=>{if(AU.switchAt&&AU.ctx&&AU.ctx.currentTime<AU.switchAt)setRoute(0,0.2);if(AU.curId&&AU.routed){AU.routed=false;armRouteRetry();document.addEventListener("visibilitychange",function v(){if(!document.hidden){document.removeEventListener("visibilitychange",v);if(AU.curId&&!AU.routed){resumeDirect();audioEl.play().then(()=>{AU.routed=true;AU.routeAt=performance.now()}).catch(()=>{})}}})}});
 /* 다른 앱(스레드·전화)에서 돌아왔을 때만: 멈춘 맥락을 깨우고, 출력 스트림이 죽어 있으면 그때 한 번만 새로 깐다. 재생 중(모뎀 포함)에는 건드리지 않는다 */
-let audHiddenAt=0;document.addEventListener("visibilitychange",()=>{if(document.hidden){audHiddenAt=Date.now();return}if(!AU.ctx||!AU.curId||Date.now()-audHiddenAt<1500)return;setTimeout(()=>{if(AU.ctx.state!=="running")AU.ctx.resume().catch(()=>{});const tr=audioEl.srcObject&&audioEl.srcObject.getAudioTracks&&audioEl.srcObject.getAudioTracks()[0];if(AU.msDest&&!AU.modemDirect&&(!tr||tr.readyState==="ended")){try{AU.analyser.disconnect(AU.msDest)}catch(e){}AU.msDest=AU.ctx.createMediaStreamDestination();AU.analyser.connect(AU.msDest);audioEl.srcObject=AU.msDest.stream}if(audioEl.paused&&AU.routed===false)audioEl.play().then(()=>{AU.routed=true;AU.routeAt=performance.now()}).catch(()=>armRouteRetry())},400)});
+let audHiddenAt=0;document.addEventListener("visibilitychange",()=>{if(document.hidden){audHiddenAt=Date.now();handover();return}if(!AU.ctx||!AU.curId||Date.now()-audHiddenAt<1500)return;setTimeout(()=>{if(AU.ctx.state!=="running")AU.ctx.resume().catch(()=>{});const tr=audioEl.srcObject&&audioEl.srcObject.getAudioTracks&&audioEl.srcObject.getAudioTracks()[0];if(AU.msDest&&!AU.modemDirect&&(!tr||tr.readyState==="ended")){try{AU.toB.disconnect(AU.msDest)}catch(e){}AU.msDest=AU.ctx.createMediaStreamDestination();AU.toB.connect(AU.msDest);audioEl.srcObject=AU.msDest.stream;AU.routeAt=performance.now();resumeDirect()}if(audioEl.paused&&AU.routed===false){resumeDirect();audioEl.play().then(()=>{AU.routed=true;AU.routeAt=performance.now()}).catch(()=>armRouteRetry())}},400)});
 function tryAutoplay(){
   if(AU.curId||IS_IOS)return;try{ensureCtx()}catch(e){diagNote("첫 화면",e);return}
   if(AU.ctx.state==="running"){ensureRoute();playChannel(1);return}
