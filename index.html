@@ -129,12 +129,14 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
 
 @media (max-width:460px){.masthead .svc{letter-spacing:.14em}.menu .nm{min-width:5.2em}input[type=range]{width:120px}}
 /* 슬리핑백: 화면 테두리. 도움말 "화면 테두리는 슬리핑백입니다 — 당신은 지금 그 안에 있습니다" */
-:root{--bag:#0e0c0a;--bag-line:#2a241d;--bag-zip:#3b3227}
-:root[data-lum="0"]{--bag:#0a0908;--bag-line:#1e1a15;--bag-zip:#2a241d}
-:root[data-lum="2"]{--bag:#13110e;--bag-line:#382f25;--bag-zip:#4d4133}
+:root{--bag:#0e0c0a;--bag-line:#2a241d;--bag-zip:#85898f;--bag-zip-hi:#c8ccd1;--bag-pull:#969aa0}
+:root[data-lum="0"]{--bag:#0a0908;--bag-line:#1e1a15;--bag-zip:#63666b;--bag-zip-hi:#96999e;--bag-pull:#707378}
+:root[data-lum="2"]{--bag:#13110e;--bag-line:#382f25;--bag-zip:#a2a6ac;--bag-zip-hi:#e4e7ea;--bag-pull:#b3b7bc}
 .bag{position:fixed;inset:0;z-index:90;pointer-events:none;border-radius:26px;box-shadow:0 0 0 40px var(--bg),inset 0 0 0 8px var(--bag)}
 .bag::before{content:"";position:absolute;inset:7px;border:1.5px solid var(--bag-line);border-radius:20px}
-.bag::after{content:"";position:absolute;top:15%;bottom:15%;right:2.5px;border-right:3px dotted var(--bag-zip)}
+.bag::after{content:"";position:absolute;top:max(15%,110px);bottom:max(15%,var(--sbh,120px));left:6.25px;width:3px;background:radial-gradient(circle at 42% 40%,var(--bag-zip-hi) 0,var(--bag-zip) .85px,var(--bag-zip) 1.1px,transparent 1.45px) 0 0/3px 5px repeat-y,var(--bag)}
+.bag i{position:absolute;left:4.25px;top:calc(max(15%,110px) - 13px);width:7px;height:17px;border-radius:2.5px;background:linear-gradient(160deg,var(--bag-zip-hi),var(--bag-pull) 45%,var(--bag-zip))}
+.bag i::after{content:"";position:absolute;left:2px;right:2px;top:3px;height:6px;border-radius:1.5px;background:var(--bag)}
 </style>
 
 <div class="wrap" id="shell">
@@ -258,7 +260,7 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
 <div class="sheet" id="sheet"><div class="inner" id="sheetin"></div></div>
 
 <audio id="radioout" playsinline></audio>
-<div class="bag" aria-hidden="true"></div>
+<div class="bag" aria-hidden="true"><i></i></div>
 
 <script>
 "use strict";
