@@ -234,7 +234,7 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
     </div>
     <p class="note faint leanline" style="margin-top:10px"></p>
     <hr>
-    <p class="note faint">글꼴: 나눔고딕코딩. 수면 PC통신 · 심야접속 v33.33<br>Built with Claude</p>
+    <p class="note faint">글꼴: 나눔고딕코딩. 수면 PC통신 · 심야접속 v33.01<br>Built with Claude</p>
   </div>
 </section>
 
@@ -342,7 +342,7 @@ function ensureCtx(){
 }
 /* 아이폰·아이패드(모든 브라우저가 사파리 엔진)는 <audio> 다리로 보내면 소리가 아예 안 난다 → 아이폰만 스피커로 바로 */const IS_IOS=/iPhone|iPad|iPod/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent));const DIRECT_OUT=IS_IOS||!(/Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent)||(navigator.maxTouchPoints>1&&/Macintosh/.test(navigator.userAgent))||matchMedia("(pointer:coarse)").matches);
 async function playChannel(id){
-  const ch=CH[id-1];if(!ch)return;if(NO_AUDIO){noAudio();return false}const gen=++AU.gen;
+  const ch=CH[id-1];if(!ch)return;if(NO_AUDIO){noAudio();return false}if(AU.modemDirect)modemDirectOff();const gen=++AU.gen;
   ensureCtx();ensureRoute();if(AU.ctx.state!=="running")await AU.ctx.resume().catch(e=>diagNote("채널 깨우기",e));
   if(gen!==AU.gen)return true;
   if(AU.curId===id&&AU.cur)return true;
@@ -380,12 +380,15 @@ function modemPlay(){
 }
 /* 첫 화면부터 파도: 브라우저가 허락하면 바로, 아니면 첫 터치에 */
 /* 다리를 켠 지 얼마나 됐나: 덜 데워졌으면(30초 안) 남은 초를 돌려준다. 스피커로 바로 나가는 길은 0. 갤럭시 S23에서 앱 첫 실행 때 30초쯤 끊겼다 */
+/* 모뎀이 나는 동안만 스피커로 바로: 다리는 무음으로 데우고, 모뎀이 끝나 조용할 때 다리로 돌아간다(재생 중에는 길을 안 바꾼다) */
+function modemDirectOn(){if(!AU.ctx||!AU.msDest||AU.direct||AU.curId||AU.modemDirect)return;try{AU.analyser.disconnect(AU.msDest)}catch(e){}try{AU.hush=AU.ctx.createConstantSource();AU.hush.offset.value=0;AU.hush.connect(AU.msDest);AU.hush.start()}catch(e){AU.hush=null}AU.analyser.connect(AU.ctx.destination);AU.modemDirect=true}
+function modemDirectOff(){if(!AU.modemDirect)return;AU.modemDirect=false;try{AU.analyser.disconnect(AU.ctx.destination)}catch(e){}try{AU.analyser.connect(AU.msDest)}catch(e){}if(AU.hush){try{AU.hush.stop();AU.hush.disconnect()}catch(e){}AU.hush=null}}
 const BRIDGE_WARM=30;function warmLeft(){if(!AU.msDest||AU.direct)return 0;return Math.max(0,BRIDGE_WARM-(AU.routeAt?(performance.now()-AU.routeAt)/1000:0))}
 function ensureRoute(){if(!AU.ctx||AU.routed||AU.direct||AU.routing)return;AU.routing=true;audioEl.play().then(()=>{AU.routed=true;AU.routeAt=performance.now();AU.routing=false}).catch(()=>{AU.routing=false;if(!AU.direct){try{AU.analyser.connect(AU.ctx.destination)}catch(e){}AU.direct=true}armRouteRetry()})}
 function armRouteRetry(){if(AU.retryArmed)return;AU.retryArmed=true;const f=()=>{removeEventListener("pointerdown",f,true);AU.retryArmed=false;if(!AU.ctx||AU.routed||!AU.curId)return;audioEl.play().then(()=>{AU.routed=true;AU.routeAt=performance.now();if(AU.direct){try{AU.analyser.disconnect(AU.ctx.destination)}catch(e){}AU.direct=false}}).catch(()=>armRouteRetry())};addEventListener("pointerdown",f,true)}
 audioEl.addEventListener("pause",()=>{if(AU.curId&&AU.routed){AU.routed=false;armRouteRetry();document.addEventListener("visibilitychange",function v(){if(!document.hidden){document.removeEventListener("visibilitychange",v);if(AU.curId&&!AU.routed)audioEl.play().then(()=>{AU.routed=true;AU.routeAt=performance.now()}).catch(()=>{})}})}});
 /* 다른 앱(스레드·전화)에서 돌아왔을 때만: 멈춘 맥락을 깨우고, 출력 스트림이 죽어 있으면 그때 한 번만 새로 깐다. 재생 중(모뎀 포함)에는 건드리지 않는다 */
-let audHiddenAt=0;document.addEventListener("visibilitychange",()=>{if(document.hidden){audHiddenAt=Date.now();return}if(!AU.ctx||!AU.curId||Date.now()-audHiddenAt<1500)return;setTimeout(()=>{if(AU.ctx.state!=="running")AU.ctx.resume().catch(()=>{});const tr=audioEl.srcObject&&audioEl.srcObject.getAudioTracks&&audioEl.srcObject.getAudioTracks()[0];if(AU.msDest&&(!tr||tr.readyState==="ended")){try{AU.analyser.disconnect(AU.msDest)}catch(e){}AU.msDest=AU.ctx.createMediaStreamDestination();AU.analyser.connect(AU.msDest);audioEl.srcObject=AU.msDest.stream}if(audioEl.paused&&AU.routed===false)audioEl.play().then(()=>{AU.routed=true;AU.routeAt=performance.now()}).catch(()=>armRouteRetry())},400)});
+let audHiddenAt=0;document.addEventListener("visibilitychange",()=>{if(document.hidden){audHiddenAt=Date.now();return}if(!AU.ctx||!AU.curId||Date.now()-audHiddenAt<1500)return;setTimeout(()=>{if(AU.ctx.state!=="running")AU.ctx.resume().catch(()=>{});const tr=audioEl.srcObject&&audioEl.srcObject.getAudioTracks&&audioEl.srcObject.getAudioTracks()[0];if(AU.msDest&&!AU.modemDirect&&(!tr||tr.readyState==="ended")){try{AU.analyser.disconnect(AU.msDest)}catch(e){}AU.msDest=AU.ctx.createMediaStreamDestination();AU.analyser.connect(AU.msDest);audioEl.srcObject=AU.msDest.stream}if(audioEl.paused&&AU.routed===false)audioEl.play().then(()=>{AU.routed=true;AU.routeAt=performance.now()}).catch(()=>armRouteRetry())},400)});
 function tryAutoplay(){
   if(AU.curId||IS_IOS)return;try{ensureCtx()}catch(e){diagNote("첫 화면",e);return}
   if(AU.ctx.state==="running"){ensureRoute();playChannel(1);return}
@@ -472,7 +475,7 @@ const LOG_QUIET=[[0,"ATDT 0131033  (무음)"],[0.5,"CONNECT 14400"],[1.0,"심야
 function runConnect(withSound){
   if(bootTimers.length||booted)return;const log=$("#introlog");log.hidden=false;log.textContent="";log.innerHTML="";$("#dialbtn").disabled=true;$("#quietbtn").disabled=true;
   try{ensureCtx();ensureRoute();if(AU.ctx.state!=="running")AU.ctx.resume().catch(e=>diagNote("깨우기",e));if(IS_IOS){const b=AU.ctx.createBuffer(1,1,AU.ctx.sampleRate),u=AU.ctx.createBufferSource();u.buffer=b;u.connect(AU.ctx.destination);u.start(0)}}catch(e){diagNote("접속 준비",e)}
-  let total=0;if(withSound){try{total=modemPlay()}catch(e){total=0;diagNote("모뎀",e)}}
+  let total=0;if(withSound){modemDirectOn();try{total=modemPlay()}catch(e){total=0;diagNote("모뎀",e)}if(total)AU.modemEnd=performance.now()+total*1000;else modemDirectOff()}
   dialedWithSound=!!(withSound&&total);
   const lines=withSound&&total?LOG_FULL:LOG_QUIET;const scale=REDUCED?0.35:1;
   lines.forEach(([t,l],i)=>bootTimers.push(setTimeout(()=>{const last=i===lines.length-1;const sp=document.createElement("span");sp.textContent=(log.childNodes.length?(last?"\n\n":"\n"):"")+l;if(last)sp.className="brite";log.append(sp);if(last){canSkip=true;$("#skiphint").hidden=false}},t*1000*scale)));
@@ -483,7 +486,7 @@ function resetIntro(){if(AU.curId)stopAll();bootTimers.forEach(clearTimeout);boo
 function afterBoot(){const h=NAV.wanted;NAV.wanted="";show("main");if(h&&h!=="main"&&VIEWS.includes(h)&&h!=="intro")show(h)}
 function finishBoot(){
   if(booted)return;booted=true;bootTimers.forEach(clearTimeout);bootTimers=[];$("#linestate").textContent="접속됨 14400bps";
-  if(!AU.curId){try{ensureRoute();playChannel(1)}catch(e){}}
+  if(!AU.curId){const go=()=>{modemDirectOff();try{ensureRoute();playChannel(1)}catch(e){}};const w=AU.modemDirect?Math.max(0,(AU.modemEnd||0)-performance.now()+150):0;if(w)setTimeout(go,w);else go()}
   afterBoot();
 }
 $("#dialbtn").addEventListener("click",()=>runConnect(true));
