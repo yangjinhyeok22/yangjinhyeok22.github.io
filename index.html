@@ -13,7 +13,7 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>html,body{background:#000}</style>
-<style>#splash{display:none}.launch #splash{display:block;position:fixed;inset:0;z-index:300;background:#000;transition:opacity .35s ease;animation:splash-bye .35s ease 5s forwards}@keyframes splash-bye{to{opacity:0;visibility:hidden}}#splash.out{opacity:0;pointer-events:none}#splash svg{position:absolute;left:50%;top:50%;margin:-137px 0 0 -137px;transform:translateY(var(--spy,0px))}#splash.blink #spc{visibility:hidden}</style>
+<style>#splash{display:none}.launch #splash{display:block;position:fixed;inset:0;z-index:300;background:#000;transition:opacity .35s ease;animation:splash-bye .35s ease 9s forwards}@keyframes splash-bye{to{opacity:0;visibility:hidden}}#splash.out{opacity:0;pointer-events:none}#splash svg{position:absolute;left:50%;top:50%;margin:-137px 0 0 -137px;transform:translateY(var(--spy,0px))}#splash.blink #spc{visibility:hidden}</style>
 <script>try{if(matchMedia("(display-mode: standalone)").matches||navigator.standalone||/[?&]splash\b/.test(location.search)){const r=document.documentElement,b=Math.max(0,screen.height-innerHeight);r.classList.add("launch");r.style.setProperty("--spy",Math.max(-24,Math.min(24,b/2-Math.min(32,b)))+"px")}}catch(e){}</script>
 </head>
 <body>
@@ -198,7 +198,7 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
       <label>취침 타이머 <button id="timerbtn">끄지 않음</button></label>
       <span id="timernote" class="faint"></span>
     </div>
-    <p class="note faint" style="margin-top:10px">화면을 꺼도 재생이 이어지도록 처리해 두었습니다. 지금 그대로 끄고 주무셔도 됩니다(갤럭시 기준). 아이폰은 크롬 사용을 권장합니다.</p>
+    <p class="note faint" style="margin-top:10px">화면을 꺼도 재생이 이어지도록 처리해 두었습니다. 지금 그대로 끄고 주무셔도 됩니다(갤럭시 기준).</p>
     <p class="note ac" id="noaudio" style="margin-top:10px" hidden></p>
   </div>
   <p class="whisper"><button id="awakebtn">정말 잠이 안 오시나요?</button></p>
@@ -225,7 +225,7 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
     <p class="note">수면을 위한 PC통신 심야접속에 들어오셨습니다. 소리는 전부 무료고, 아무도 당신을 깨우지 않습니다. 화면 테두리는 슬리핑백입니다 — 당신은 지금 그 안에 있습니다.</p>
     <hr>
     <p class="dim">· <span class="hi">소리</span> — 다섯 채널 모두 접속한 당신의 단말기가 그 자리에서 만드는 소리입니다. 녹음된 음원이 없으니 권리 문제도, 서버 비용도 없습니다. 분홍 소음 위에 파도·비·바람·불을 얹었습니다.</p>
-    <p class="dim">· <span class="hi">화면은 꺼도 됩니다</span> — 지금 그대로 끄고 주무셔도 됩니다(갤럭시 기준). 아이폰은 크롬 사용을 권장합니다.</p>
+    <p class="dim">· <span class="hi">화면은 꺼도 됩니다</span> — 지금 그대로 끄고 주무셔도 됩니다(갤럭시 기준).</p>
     <p class="dim">· <span class="hi">비행기 모드</span> — 심야접속은 스트리밍이 아닙니다. 프로그래밍입니다. 따라서 접속 후에는 비행기 모드로 바꾸셔도 정상 작동합니다. 한 번 접속한 브라우저에서는 다음부터 인터넷 없이도 열립니다.</p>
     <p class="dim">· <span class="hi">취침 타이머</span> — 청취방에서 30분, 또는 1시간부터 8시간까지 고르면 그 시각에 조용히 멈춥니다.</p>
     <p class="dim">· <span class="hi">가입 없음</span> — 아이디도, 전화번호도, 이메일도 받지 않습니다. 남는 것은 이 단말기 안의 "함께 한 시간"뿐입니다.</p>
@@ -334,6 +334,8 @@ function ensureCtx(){
   if(AU.ctx)return;if(IS_IOS){try{if(navigator.audioSession)navigator.audioSession.type="playback"}catch(e){}}const AC=window.AudioContext||window.webkitAudioContext;
   /* 'playback'은 출력 버퍼를 넉넉히 잡는다. 다른 프로그램이 CPU를 잠깐 다 써도(페이스북 알림 같은) 소리가 끊기지 않게. 잠드는 소리엔 지연이 상관없다 */
   try{AU.ctx=new AC({latencyHint:"playback"})}catch(e){diagNote("맥락(playback)",e);try{AU.ctx=new AC()}catch(e2){diagNote("맥락",e2);if(IS_IOS&&navigator.audioSession){try{navigator.audioSession.type="auto"}catch(_){}AU.ctx=new AC()}else throw e2}}
+  /* 시스템이 소리 장치를 멈추면(아이폰: 이어폰을 뺄 때 등) 소리가 나야 할 때·보이는 동안엔 바로 다시 깨운다 */
+  AU.ctx.onstatechange=()=>{const c=AU.ctx,s=c.state;if(s==="running"||s==="closed")return;diagNote("소리 장치",s);const want=()=>AU.curId||performance.now()<(AU.modemEnd||0),wake=()=>{if(c.state!=="running"&&c.state!=="closed"&&!document.hidden&&want())c.resume().catch(e=>diagNote("다시 깨우기",e))};if(!want())return;if(document.hidden)document.addEventListener("visibilitychange",function v(){if(!document.hidden){document.removeEventListener("visibilitychange",v);setTimeout(wake,250)}});else setTimeout(wake,250)};
   AU.timerGain=AU.ctx.createGain();AU.master=AU.ctx.createGain();AU.master.gain.value=volCurve(ls.get("vol",35));
   AU.comp=AU.ctx.createDynamicsCompressor();AU.comp.threshold.value=-14;AU.comp.ratio.value=5;AU.comp.attack.value=0.01;AU.comp.release.value=0.3;
   AU.analyser=AU.ctx.createAnalyser();AU.analyser.fftSize=512;AU.analyser.smoothingTimeConstant=0.35;
@@ -492,24 +494,26 @@ document.addEventListener("keydown",e=>{
 let booted=false,bootTimers=[],canSkip=false,dialedWithSound=false;
 const LOG_FULL=[[0,"ATDT 0131033"],[0.3,"DIALING ........"],[2.2,"CARRIER DETECTED"],[3.1,"HANDSHAKE  V.32bis"],[4.8,"TRAINING ............"],[8.8,"EQUALIZING ......"],[11.7,"PROTOCOL: LAP-M   COMPRESSION: V.42bis"],[14.9,"CONNECT 14400"],[15.5,"심야접속 BBS에 오신 것을 환영합니다.\n회선은 느리고, 밤은 깁니다."]];
 const LOG_QUIET=[[0,"ATDT 0131033  (무음)"],[0.5,"CONNECT 14400"],[1.0,"심야접속 BBS에 오신 것을 환영합니다.\n회선은 느리고, 밤은 깁니다."]];
+/* 소리 장치를 막 켰으면 오디오 시계가 실제로 흐를 때까지(아이폰 0.4초, 그 밖 0.25초, 최대 1.5초) 기다렸다가 부른다 — 켜는 순간 앞소리가 잘리지 않게 */
+function whenAudible(fn,fresh){if(!fresh||!AU.ctx)return fn();const t0=performance.now(),need=IS_IOS?0.4:0.25;let c0=null;const poll=()=>{const c=AU.ctx;if(c.state==="running"){if(c0===null)c0=c.currentTime;if(c.currentTime-c0>=need)return fn()}if(performance.now()-t0>1500)return fn();bootTimers.push(setTimeout(poll,30))};poll()}
 function runConnect(withSound){
-  if(bootTimers.length||booted)return;const log=$("#introlog");log.hidden=false;log.textContent="";log.innerHTML="";$("#dialbtn").disabled=true;$("#quietbtn").disabled=true;
+  if(bootTimers.length||booted)return;const fresh=!AU.ctx||AU.ctx.state!=="running";const log=$("#introlog");log.hidden=false;log.textContent="";log.innerHTML="";$("#dialbtn").disabled=true;$("#quietbtn").disabled=true;
   try{ensureCtx();ensureRoute();if(AU.ctx.state!=="running")AU.ctx.resume().catch(e=>diagNote("깨우기",e));if(IS_IOS){const b=AU.ctx.createBuffer(1,1,AU.ctx.sampleRate),u=AU.ctx.createBufferSource();u.buffer=b;u.connect(AU.ctx.destination);u.start(0)}}catch(e){diagNote("접속 준비",e)}
   const hang=withSound&&AU.curId?(stopAll(),600):0;
   const go=()=>{
-  let total=0;if(withSound){modemDirectOn();try{total=modemPlay()}catch(e){total=0;diagNote("모뎀",e)}if(total)AU.modemEnd=performance.now()+total*1000;else modemDirectOff()}
+  let total=0;if(withSound){modemDirectOn();try{total=modemPlay()}catch(e){total=0;diagNote("모뎀",e)}if(total){AU.modemEnd=performance.now()+total*1000;AU.modemEndCtx=AU.ctx.currentTime+0.08+total}else modemDirectOff()}
   dialedWithSound=!!(withSound&&total);
   const lines=withSound&&total?LOG_FULL:LOG_QUIET;const scale=REDUCED?0.35:1;
   lines.forEach(([t,l],i)=>bootTimers.push(setTimeout(()=>{const last=i===lines.length-1;const sp=document.createElement("span");sp.textContent=(log.childNodes.length?(last?"\n\n":"\n"):"")+l;if(last)sp.className="brite";log.append(sp);if(last){canSkip=true;$("#skiphint").hidden=false}},t*1000*scale)));
   const end=(lines[lines.length-1][0]+(withSound?4.8:3.0))*1000*scale;
   bootTimers.push(setTimeout(finishBoot,end));
-  };if(hang)bootTimers.push(setTimeout(go,hang));else go();
+  };const start=()=>whenAudible(go,withSound&&fresh);if(hang)bootTimers.push(setTimeout(start,hang));else start();
 }
 function resetIntro(){if(AU.curId)stopAll();bootTimers.forEach(clearTimeout);bootTimers=[];booted=false;canSkip=false;dialedWithSound=false;const lg=$("#introlog");lg.hidden=true;lg.textContent="";$("#skiphint").hidden=true;$("#dialbtn").disabled=false;$("#quietbtn").disabled=false;$("#linestate").textContent="대기"}
 function afterBoot(){const h=NAV.wanted;NAV.wanted="";show("main");if(h&&h!=="main"&&VIEWS.includes(h)&&h!=="intro")show(h)}
 function finishBoot(){
   if(booted)return;booted=true;bootTimers.forEach(clearTimeout);bootTimers=[];$("#linestate").textContent="접속됨 14400bps";
-  if(!AU.curId){const go=()=>{modemDirectOff();try{ensureRoute();playChannel(1)}catch(e){}};const w=AU.modemDirect?Math.max(0,(AU.modemEnd||0)-performance.now()+150):0;if(w)setTimeout(go,w);else go()}
+  if(!AU.curId){const go=()=>{modemDirectOff();try{ensureRoute();playChannel(1)}catch(e){}};const c=AU.ctx,w=c&&c.state==="running"&&AU.modemEndCtx?Math.max(0,(AU.modemEndCtx-c.currentTime)*1000+150):(AU.modemDirect?Math.max(0,(AU.modemEnd||0)-performance.now()+150):0);if(w)setTimeout(go,w);else go()}
   afterBoot();
 }
 $("#dialbtn").addEventListener("click",()=>runConnect(true));
@@ -573,8 +577,8 @@ setInterval(tick,1000);
 document.addEventListener("visibilitychange",()=>{leanFlush();if(!document.hidden){tick();if(timerEndAt&&Date.now()>=timerEndAt)stopAll()}});
 
 /* ============ 시작 ============ */
-/* 앱 아이콘으로 열었을 때: 안드로이드 시작 화면과 똑같은 로고를 페이지가 열리기 시작한 때부터 모두 3초 — 커서는 깜빡이고 끝 0.35초에 스르르(누르면 바로 넘어감) */
-(function(){const s=$("#splash");if(!s||!document.documentElement.classList.contains("launch"))return;const end=()=>{if(s.classList.contains("out"))return;s.classList.add("out");setTimeout(()=>s.remove(),450)};s.addEventListener("click",end);requestAnimationFrame(()=>{const n=performance.now(),fade=Math.max(n+800,2650);if(!REDUCED)for(let t=Math.max(n+700,900);t+600<=fade;t+=1000){setTimeout(()=>s.classList.add("blink"),t-n);setTimeout(()=>s.classList.remove("blink"),t+500-n)}setTimeout(end,fade-n)})})();
+/* 앱 아이콘으로 열었을 때: 안드로이드 시작 화면과 똑같은 로고 — 켜진 커서가 다섯 번 보이고(일, 이, 삼, 사, 오) 다시 꺼지기 직전에 스르르 첫 화면으로(누르면 바로 넘어감) */
+(function(){const s=$("#splash");if(!s||!document.documentElement.classList.contains("launch"))return;const end=()=>{if(s.classList.contains("out"))return;s.classList.add("out");setTimeout(()=>s.remove(),450)};s.addEventListener("click",end);requestAnimationFrame(()=>{const n=performance.now(),t1=Math.max(n+700,900),fade=t1+4000;if(!REDUCED)for(let t=t1;t<fade;t+=1000){setTimeout(()=>s.classList.add("blink"),t-n);setTimeout(()=>s.classList.remove("blink"),t+500-n)}setTimeout(end,fade-n)})})();
 applyLum();renderChans();vuLoop();tick();tryAutoplay();
 if(NO_AUDIO){const n=$("#noaudio");n.innerHTML=NOAUDIO_HTML;n.hidden=false}
 try{new ResizeObserver(()=>{const sb=$("#statusbar");document.documentElement.style.setProperty("--sbh",(sb.offsetHeight?sb.offsetHeight+32:120)+"px")}).observe($("#statusbar"))}catch(e){}
