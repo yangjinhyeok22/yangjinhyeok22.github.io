@@ -228,6 +228,7 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
     <p class="dim">· <span class="hi">화면은 꺼도 됩니다</span> — 지금 그대로 끄고 주무셔도 됩니다(갤럭시 기준).</p>
     <p class="dim">· <span class="hi">비행기 모드</span> — 심야접속은 스트리밍이 아닙니다. 프로그래밍입니다. 따라서 접속 후에는 비행기 모드로 바꾸셔도 정상 작동합니다. 한 번 접속한 브라우저에서는 다음부터 인터넷 없이도 열립니다.</p>
     <p class="dim">· <span class="hi">취침 타이머</span> — 청취방에서 30분, 또는 1시간부터 8시간까지 고르면 그 시각에 조용히 멈춥니다.</p>
+    <p class="dim">· <span class="hi">멈춤 기록</span> — 소리가 멈춘 때와 까닭(이 단말기에만 남습니다)<span id="stoplog" style="display:block;margin-top:4px"></span></p>
     <p class="dim">· <span class="hi">가입 없음</span> — 아이디도, 전화번호도, 이메일도 받지 않습니다. 남는 것은 이 단말기 안의 "함께 한 시간"뿐입니다.</p>
     <p class="dim">· <span class="hi">근거</span> — 청취방 맨 아래 [정말 잠이 안 오시나요?]를 누르면 채널마다 제공되는 소리가 수면에 도움이 된다는 내용의 논문들로 이어집니다. 읽다 보면 잠이 옵니다.</p>
     <hr>
@@ -237,7 +238,7 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
     </div>
     <p class="note faint leanline" style="margin-top:10px"></p>
     <hr>
-    <p class="note faint">글꼴: 나눔고딕코딩. 수면 PC통신 · 심야접속 v33.13<br>Built with Claude</p>
+    <p class="note faint">글꼴: 나눔고딕코딩. 수면 PC통신 · 심야접속 v33.14<br>Built with Claude</p>
   </div>
 </section>
 
@@ -276,6 +277,14 @@ const REDUCED=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const ls={get(k,d){try{const v=localStorage.getItem("sb_"+k);return v===null?d:JSON.parse(v)}catch(e){return d}},
           set(k,v){try{localStorage.setItem("sb_"+k,JSON.stringify(v))}catch(e){}}};
 const pad=n=>String(n).padStart(2,"0");
+/* 멈춤 기록 — 소리가 왜 멈췄는지 이 단말기 안에만 적어 둔다(최근 12줄) */
+let STOPWHY="",aliveT=null;
+function renderStopLog(){const el=document.getElementById("stoplog");if(!el)return;const a=ls.get("stoplog",[]);el.textContent=a.length?"":"아직 없습니다. 소리가 멈추면 그때와 까닭이 여기에 적힙니다.";a.slice().reverse().forEach(r=>{const d=new Date(r[0]),p=document.createElement("span");p.style.display="block";p.textContent=(d.getMonth()+1)+"/"+d.getDate()+" "+pad(d.getHours())+":"+pad(d.getMinutes())+" · "+r[1]+(r[2]?" · 화면 꺼짐":"");el.appendChild(p)})}
+function stopLog(why){try{const a=ls.get("stoplog",[]);a.push([Date.now(),why,document.hidden?1:0]);while(a.length>12)a.shift();ls.set("stoplog",a);renderStopLog()}catch(e){}}
+function aliveOn(id){const w=()=>ls.set("alive",[Date.now(),id]);w();if(aliveT)clearInterval(aliveT);aliveT=setInterval(w,30000)}
+function aliveOff(){if(aliveT){clearInterval(aliveT);aliveT=null}ls.set("alive",null)}
+(function(){const a=ls.get("alive",null);if(a&&a[0]){ls.set("alive",null);const d=new Date(a[0]);stopLog("재생 중에 앱이 닫혔다가 다시 열림 — 마지막으로 소리 난 때 "+pad(d.getHours())+":"+pad(d.getMinutes())+" (CH.00"+a[1]+")")}})();
+addEventListener("load",renderStopLog);
 const fmtClock=d=>pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds());
 function esc(x){const d=document.createElement("div");d.textContent=x==null?"":String(x);return d.innerHTML}
 
@@ -335,7 +344,7 @@ function ensureCtx(){
   /* 'playback'은 출력 버퍼를 넉넉히 잡는다. 다른 프로그램이 CPU를 잠깐 다 써도(페이스북 알림 같은) 소리가 끊기지 않게. 잠드는 소리엔 지연이 상관없다 */
   try{AU.ctx=new AC({latencyHint:"playback"})}catch(e){diagNote("맥락(playback)",e);try{AU.ctx=new AC()}catch(e2){diagNote("맥락",e2);if(IS_IOS&&navigator.audioSession){try{navigator.audioSession.type="auto"}catch(_){}AU.ctx=new AC()}else throw e2}}
   /* 시스템이 소리 장치를 멈추면(아이폰: 이어폰을 뺄 때 등) 소리가 나야 할 때·보이는 동안엔 바로 다시 깨운다 */
-  AU.ctx.onstatechange=()=>{const c=AU.ctx,s=c.state;if(s==="running"||s==="closed")return;diagNote("소리 장치",s);const want=()=>AU.curId||performance.now()<(AU.modemEnd||0),wake=()=>{if(c.state!=="running"&&c.state!=="closed"&&!document.hidden&&want())c.resume().catch(e=>diagNote("다시 깨우기",e))};if(!want())return;if(document.hidden)document.addEventListener("visibilitychange",function v(){if(!document.hidden){document.removeEventListener("visibilitychange",v);setTimeout(wake,250)}});else setTimeout(wake,250)};
+  AU.ctx.onstatechange=()=>{const c=AU.ctx,s=c.state;if(s==="running"||s==="closed")return;diagNote("소리 장치",s);if(AU.curId)stopLog("소리 장치가 멈춤("+s+")");const want=()=>AU.curId||performance.now()<(AU.modemEnd||0),wake=()=>{if(c.state!=="running"&&c.state!=="closed"&&!document.hidden&&want())c.resume().catch(e=>diagNote("다시 깨우기",e))};if(!want())return;if(document.hidden)document.addEventListener("visibilitychange",function v(){if(!document.hidden){document.removeEventListener("visibilitychange",v);setTimeout(wake,250)}});else setTimeout(wake,250)};
   AU.timerGain=AU.ctx.createGain();AU.master=AU.ctx.createGain();AU.master.gain.value=volCurve(ls.get("vol",35));
   AU.comp=AU.ctx.createDynamicsCompressor();AU.comp.threshold.value=-14;AU.comp.ratio.value=5;AU.comp.attack.value=0.01;AU.comp.release.value=0.3;
   AU.analyser=AU.ctx.createAnalyser();AU.analyser.fftSize=512;AU.analyser.smoothingTimeConstant=0.35;
@@ -366,11 +375,11 @@ async function playChannel(id){
     else{if(AU.route!==0)setRoute(0);AU.warmHold=false}}
   if(w>3){const N=48,cv=new Float32Array(N);for(let i=0;i<N;i++){const u=i/(N-1);cv[i]=Math.max(0.0001,built.trim*u*u)}g.setValueCurveAtTime(cv,t+0.45,w)}
   else{g.setValueAtTime(0.0001,t+0.45);g.linearRampToValueAtTime(built.trim,t+2.4)}
-  setNp("▶ "+ch.full,null);$("#sbplay").textContent="정지";mediaSession(ch);renderChans();return true;
+  setNp("▶ "+ch.full,null);$("#sbplay").textContent="정지";aliveOn(AU.curId);mediaSession(ch);renderChans();return true;
 }
-function stopAll(){AU.gen=(AU.gen||0)+1;if(AU.cur){AU.cur.stop();AU.cur=null;AU.stopAt=performance.now()}AU.curId=0;leanFlush();clearSleepTimer(false);setNp("■ 정지됨 — 청취방에서 채널을 고르십시오",null,true);$("#sbplay").textContent="재생";renderChans()}
+function stopAll(){if(AU.curId)stopLog(STOPWHY||"앱 안에서 정지");STOPWHY="";aliveOff();AU.gen=(AU.gen||0)+1;if(AU.cur){AU.cur.stop();AU.cur=null;AU.stopAt=performance.now()}AU.curId=0;leanFlush();clearSleepTimer(false);setNp("■ 정지됨 — 청취방에서 채널을 고르십시오",null,true);$("#sbplay").textContent="재생";renderChans()}
 function setNp(txt,sub,raw){const el=$("#npline");if(raw){el.textContent=txt;return}el.textContent="";el.append(txt+(sub?" ":""));if(sub){const b=document.createElement("b");b.textContent=sub;el.append(b)}}
-function mediaSession(ch){try{if(!("mediaSession" in navigator))return;navigator.mediaSession.metadata=new MediaMetadata({title:ch.full,artist:"심야접속 · SleepingBag"});navigator.mediaSession.setActionHandler("play",()=>playChannel(AU.curId||1));navigator.mediaSession.setActionHandler("pause",()=>stopAll());navigator.mediaSession.setActionHandler("stop",()=>stopAll())}catch(e){}}
+function mediaSession(ch){try{if(!("mediaSession" in navigator))return;navigator.mediaSession.metadata=new MediaMetadata({title:ch.full,artist:"심야접속 · SleepingBag"});navigator.mediaSession.setActionHandler("play",()=>playChannel(AU.curId||1));navigator.mediaSession.setActionHandler("pause",()=>{STOPWHY="시스템이 일시정지 신호를 보냄(다른 소리·알림창·이어폰 단추)";stopAll()});navigator.mediaSession.setActionHandler("stop",()=>{STOPWHY="시스템이 정지 신호를 보냄";stopAll()})}catch(e){}}
 
 /* 모뎀 접속음 v3 — 선배가 녹음한 실제 모뎀(16.4초)을 0.1초 단위로 분석해 같은 타임라인·주파수로 합성 */
 function modemPlay(){
@@ -430,7 +439,7 @@ function applyTimer(){
   timerEndAt=Date.now()+mins*60000;const t=AU.ctx.currentTime,end=t+mins*60,fade=Math.min(120,mins*30);
   AU.timerGain.gain.setValueAtTime(1,Math.max(t,end-fade));AU.timerGain.gain.linearRampToValueAtTime(0.0001,end);
   $("#timernote").textContent="끝날 때 2분에 걸쳐 잦아듭니다";
-  timerTick=setInterval(()=>{if(document.hidden)return;const left=timerEndAt-Date.now();if(left<=0){stopAll();return}$("#timerleft").textContent="소등까지 "+pad(Math.floor(left/3600000))+":"+pad(Math.floor(left/60000)%60)+":"+pad(Math.floor(left/1000)%60)},1000);
+  timerTick=setInterval(()=>{if(document.hidden)return;const left=timerEndAt-Date.now();if(left<=0){STOPWHY="취침 타이머";stopAll();return}$("#timerleft").textContent="소등까지 "+pad(Math.floor(left/3600000))+":"+pad(Math.floor(left/60000)%60)+":"+pad(Math.floor(left/1000)%60)},1000);
 }
 function clearSleepTimer(keep){if(timerTick){clearInterval(timerTick);timerTick=null}$("#timerleft").textContent="";timerEndAt=0;if(AU.ctx){const t=AU.ctx.currentTime;AU.timerGain.gain.cancelScheduledValues(t);AU.timerGain.gain.setValueAtTime(1,t)}if(!keep){timerIdx=0;$("#timerbtn").textContent="끄지 않음";$("#timernote").textContent=""}}
 function vuLoop(){
@@ -574,7 +583,7 @@ function tick(){
   $$(".leanline").forEach(x=>{x.textContent=leanLine()});
 }
 setInterval(tick,1000);
-document.addEventListener("visibilitychange",()=>{leanFlush();if(!document.hidden){tick();if(timerEndAt&&Date.now()>=timerEndAt)stopAll()}});
+document.addEventListener("visibilitychange",()=>{leanFlush();if(!document.hidden){tick();if(timerEndAt&&Date.now()>=timerEndAt){STOPWHY="취침 타이머";stopAll()}}});
 
 /* ============ 시작 ============ */
 /* 앱 아이콘으로 열었을 때: 안드로이드 시작 화면과 똑같은 로고 — 켜진 커서가 다섯 번 보이고(일, 이, 삼, 사, 오) 다시 꺼지기 직전에 스르르 첫 화면으로(누르면 바로 넘어감) */
