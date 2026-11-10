@@ -423,6 +423,7 @@ button.link{border:0;padding:0;color:var(--accent);background:none;text-decorati
     <p class="dim">· <span class="hi">화면은 꺼도 됩니다</span> — 지금 그대로 끄고 주무셔도 됩니다(갤럭시 기준).</p>
     <p class="dim">· <span class="hi">비행기 모드</span> — 심야접속은 스트리밍이 아닙니다. 프로그래밍입니다. 따라서 접속 후에는 비행기 모드로 바꾸셔도 정상 작동합니다. 한 번 접속한 브라우저에서는 다음부터 인터넷 없이도 열립니다.</p>
     <p class="dim">· <span class="hi">취침 타이머</span> — 청취방에서 30분, 또는 1시간부터 8시간까지 고르면 그 시각에 조용히 멈춥니다.</p>
+    <p class="dim">· <span class="hi">멈춤 기록</span> — 소리가 멈춘 때와 까닭(이 단말기에만 남습니다)<span id="stoplog" style="display:block;margin-top:4px"></span></p>
     <p class="dim">· <span class="hi">SM(Sleeping Message)</span> — 모래글·포스트잇·별에 묶은 말·시. 채팅이 아닙니다. 답장은 없고, 알림도 없고, 누가 읽었는지도 모릅니다. 그래서 자다가 확인할 필요가 없습니다.</p>
     <p class="dim">· <span class="hi">소멸</span> — 모래글은 밀물에 24시간, 포스트잇은 72시간 뒤 떨어지고, 별에 묶은 말은 30일, 흙글씨는 바람이 7일 뒤 지우고, 시는 서가에 남습니다. 시 아래 꽃다발은 매일 저녁 8시에 치웁니다 — 시는 남습니다.</p>
     <p class="dim" id="helplocal" hidden>· <span class="hi">장부</span> — 이 판에서는 흔적이 이 단말기 안에만 남습니다. 다른 사람에게는 보이지 않고, 브라우저 자료를 지우면 함께 사라집니다. 모두가 함께 보는 공용 장부는 정식 오픈 때 열립니다.</p>
@@ -447,7 +448,7 @@ button.link{border:0;padding:0;color:var(--accent);background:none;text-decorati
       <div id="adminmsg" class="note ac" style="margin-top:8px"></div>
     </div>
     <hr>
-    <p class="note faint">별 자료: HYG 항성 카탈로그, d3-celestial(BSD). 별 위치는 이 단말기가 현재 시각과 위치로 직접 계산합니다. 글꼴: 나눔고딕코딩·나눔손글씨 펜·나눔명조·Courier Prime. 수면 PC통신 · 심야접속 v33.13D<br>Built with Claude</p>
+    <p class="note faint">별 자료: HYG 항성 카탈로그, d3-celestial(BSD). 별 위치는 이 단말기가 현재 시각과 위치로 직접 계산합니다. 글꼴: 나눔고딕코딩·나눔손글씨 펜·나눔명조·Courier Prime. 수면 PC통신 · 심야접속 v33.14D<br>Built with Claude</p>
   </div>
 </section>
 
@@ -533,7 +534,7 @@ button.link{border:0;padding:0;color:var(--accent);background:none;text-decorati
 </svg></div>
   <div class="holdmsg" id="holdmsg" hidden></div>
   <div class="chipnote" id="chipnote" hidden><p>좋아했던 중학교 음악 선생님이 말했다.</p><p>"여러분, 여러분이 음악을 왜 음악으로 느끼는지 아세요? 반복이 있기 때문이에요."</p><p>그러나 이 음악은 반복이 없다. 오직 우연만이 있을 뿐이다. 그것도 영원히.</p></div>
-  <div class="wbot shelfbar"><span class="whint" id="shelfhint">◀ ▶ 로 액자 앞까지 걸어갑니다 · 액자를 누르면 읽습니다</span><button id="prevframe">◀</button><button id="nextframe">▶</button><button id="flowerbtn">꽃다발 들기</button><button id="snapbtn" hidden>캡처</button><button class="pri" data-write="shelf">쓰기</button><button id="listbtn">목록</button><button data-ctl>조절</button></div>
+  <div class="wbot shelfbar"><span class="whint" id="shelfhint">◀ ▶ 로 액자 앞까지 걸어갑니다 · 액자를 누르면 읽습니다</span><button id="prevframe">◀</button><button id="nextframe">▶</button><button id="flowerbtn">꽃다발 들기</button><button id="snapbtn" hidden>캡처</button><button class="pri" data-write="shelf">쓰기</button><button id="listbtn">목록</button><button id="shelfsnd">소리 끄기</button><button data-ctl>조절</button></div>
 </div>
 
 <div class="world" id="w-savanna">
@@ -571,6 +572,14 @@ const ls={get(k,d){try{const v=localStorage.getItem("sb_"+k);return v===null?d:J
 /* 장부(흔적·아이디) 자리: claude.ai 아티팩트 안에서는 공용 장부(claude.use), 그 밖(GitHub 웹·설치 앱)에서는 이 단말기 안의 장부(localDb) */
 const LOCAL_DB=!(window.claude&&typeof window.claude.use==="function");
 const pad=n=>String(n).padStart(2,"0");
+/* 멈춤 기록 — 소리가 왜 멈췄는지 이 단말기 안에만 적어 둔다(최근 12줄) */
+let STOPWHY="",aliveT=null;
+function renderStopLog(){const el=document.getElementById("stoplog");if(!el)return;const a=ls.get("stoplog",[]);el.textContent=a.length?"":"아직 없습니다. 소리가 멈추면 그때와 까닭이 여기에 적힙니다.";a.slice().reverse().forEach(r=>{const d=new Date(r[0]),p=document.createElement("span");p.style.display="block";p.textContent=(d.getMonth()+1)+"/"+d.getDate()+" "+pad(d.getHours())+":"+pad(d.getMinutes())+" · "+r[1]+(r[2]?" · 화면 꺼짐":"");el.appendChild(p)})}
+function stopLog(why){try{const a=ls.get("stoplog",[]);a.push([Date.now(),why,document.hidden?1:0]);while(a.length>12)a.shift();ls.set("stoplog",a);renderStopLog()}catch(e){}}
+function aliveOn(id){const w=()=>ls.set("alive",[Date.now(),id]);w();if(aliveT)clearInterval(aliveT);aliveT=setInterval(w,30000)}
+function aliveOff(){if(aliveT){clearInterval(aliveT);aliveT=null}ls.set("alive",null)}
+(function(){const a=ls.get("alive",null);if(a&&a[0]){ls.set("alive",null);const d=new Date(a[0]);stopLog("재생 중에 앱이 닫혔다가 다시 열림 — 마지막으로 소리 난 때 "+pad(d.getHours())+":"+pad(d.getMinutes())+" (CH.00"+a[1]+")")}})();
+addEventListener("load",renderStopLog);
 const fmtClock=d=>pad(d.getHours())+":"+pad(d.getMinutes())+":"+pad(d.getSeconds());
 const fmtDate=d=>d.getFullYear()+"."+pad(d.getMonth()+1)+"."+pad(d.getDate());
 function fmtWhen(t){const d=new Date(t),n=new Date();return (d.toDateString()===n.toDateString()?"오늘 ":fmtDate(d)+" ")+fmtClock(d)}
@@ -627,7 +636,7 @@ function buildChannel(ch){
   else if(ch.key==="waves"){const s=srcOf("pink"),lp=F("lowpass",430,0.7),g=AU.ctx.createGain();g.gain.value=0.52;s.connect(lp).connect(g).connect(out);stops.push(s,lfo(0.052,0.36,g.gain),lfo(0.019,0.13,g.gain),lfo(0.052,110,lp.frequency,0));const s2=srcOf("pink",5),bp=F("bandpass",1500,0.9),g2=AU.ctx.createGain();g2.gain.value=0.02;s2.connect(bp).connect(g2).connect(out);stops.push(s2,lfo(0.052,0.16,g2.gain,2.4))}
   else if(ch.key==="rain"){const s=srcOf("rainbake"),lp=F("lowpass",8200);s.connect(lp).connect(out);stops.push(s);
     /* 천둥: 40~130초마다 한 번, 아주 낮게 */const th={t:0,stop(){clearTimeout(this.t)}};const sched=()=>{th.t=setTimeout(()=>{thunder(out);sched()},40000+Math.random()*90000)};th.t=setTimeout(()=>{thunder(out);sched()},12000+Math.random()*30000);stops.push(th)}
-  else if(ch.key==="wind"){const s=srcOf("pink"),bp=F("bandpass",470,1.5),g=AU.ctx.createGain();g.gain.value=0.74;s.connect(bp).connect(g).connect(out);stops.push(s,lfo(0.041,245,bp.frequency),lfo(0.096,120,bp.frequency,3),lfo(0.096,0.16,g.gain,1.5))}
+  else if(ch.key==="wind"){const s=srcOf("pink"),hp=F("highpass",260,0.7),bp=F("bandpass",640,2.4),g=AU.ctx.createGain();g.gain.value=0.9;s.connect(hp).connect(bp).connect(g).connect(out);stops.push(s,lfo(0.083,230,bp.frequency),lfo(0.21,130,bp.frequency,2),lfo(0.137,0.3,g.gain,1),lfo(0.31,0.16,g.gain,4));const s2=srcOf("pink",5),bp2=F("bandpass",1450,7),g2=AU.ctx.createGain();g2.gain.value=0.15;s2.connect(bp2).connect(g2).connect(out);stops.push(s2,lfo(0.118,380,bp2.frequency,1.5),lfo(0.29,170,bp2.frequency),lfo(0.173,0.08,g2.gain,3))}
   else if(ch.key==="fire"){const s=srcOf("firebake"),lp=F("lowpass",5200);s.connect(lp).connect(out);stops.push(s)}
   out.connect(AU.timerGain);
   const trims={pink:0.8,waves:1.15,rain:0.85,wind:0.95,fire:0.85};
@@ -639,7 +648,7 @@ function ensureCtx(){
   /* 'playback'은 출력 버퍼를 넉넉히 잡는다. 다른 프로그램이 CPU를 잠깐 다 써도(페이스북 알림 같은) 소리가 끊기지 않게. 잠드는 소리엔 지연이 상관없다 */
   try{AU.ctx=new AC({latencyHint:"playback"})}catch(e){diagNote("맥락(playback)",e);try{AU.ctx=new AC()}catch(e2){diagNote("맥락",e2);if(IS_IOS&&navigator.audioSession){try{navigator.audioSession.type="auto"}catch(_){}AU.ctx=new AC()}else throw e2}}
   /* 시스템이 소리 장치를 멈추면(아이폰: 이어폰을 뺄 때 등) 소리가 나야 할 때·보이는 동안엔 바로 다시 깨운다 */
-  AU.ctx.onstatechange=()=>{const c=AU.ctx,s=c.state;if(s==="running"||s==="closed")return;diagNote("소리 장치",s);const want=()=>AU.curId||performance.now()<(AU.modemEnd||0),wake=()=>{if(c.state!=="running"&&c.state!=="closed"&&!document.hidden&&want())c.resume().catch(e=>diagNote("다시 깨우기",e))};if(!want())return;if(document.hidden)document.addEventListener("visibilitychange",function v(){if(!document.hidden){document.removeEventListener("visibilitychange",v);setTimeout(wake,250)}});else setTimeout(wake,250)};
+  AU.ctx.onstatechange=()=>{const c=AU.ctx,s=c.state;if(s==="running"||s==="closed")return;diagNote("소리 장치",s);if(AU.curId)stopLog("소리 장치가 멈춤("+s+")");const want=()=>AU.curId||performance.now()<(AU.modemEnd||0),wake=()=>{if(c.state!=="running"&&c.state!=="closed"&&!document.hidden&&want())c.resume().catch(e=>diagNote("다시 깨우기",e))};if(!want())return;if(document.hidden)document.addEventListener("visibilitychange",function v(){if(!document.hidden){document.removeEventListener("visibilitychange",v);setTimeout(wake,250)}});else setTimeout(wake,250)};
   AU.timerGain=AU.ctx.createGain();AU.master=AU.ctx.createGain();AU.master.gain.value=volCurve(ls.get("vol",35));
   AU.comp=AU.ctx.createDynamicsCompressor();AU.comp.threshold.value=-14;AU.comp.ratio.value=5;AU.comp.attack.value=0.01;AU.comp.release.value=0.3;
   AU.analyser=AU.ctx.createAnalyser();AU.analyser.fftSize=512;AU.analyser.smoothingTimeConstant=0.35;
@@ -674,11 +683,11 @@ async function playChannel(id){
     else{if(AU.route!==0)setRoute(0);AU.warmHold=false}}
   if(w>3){const N=48,cv=new Float32Array(N);for(let i=0;i<N;i++){const u=i/(N-1);cv[i]=Math.max(0.0001,built.trim*u*u)}g.setValueCurveAtTime(cv,t+0.45,w)}
   else{g.setValueAtTime(0.0001,t+0.45);g.linearRampToValueAtTime(built.trim,t+2.4)}
-  setNp("▶ "+ch.full,null);$("#sbplay").textContent="정지";mediaSession(ch);renderChans();return true;
+  setNp("▶ "+ch.full,null);$("#sbplay").textContent="정지";aliveOn(AU.curId);mediaSession(ch);renderChans();return true;
 }
-function stopAll(){chip.stop();AU.gen=(AU.gen||0)+1;if(AU.cur){AU.cur.stop();AU.cur=null;AU.stopAt=performance.now()}AU.curId=0;leanFlush();clearSleepTimer(false);setNp("■ 정지됨 — 세계에 들어가면 소리가 납니다",null,true);$("#sbplay").textContent="재생";renderChans()}
+function stopAll(){chip.stop();if(AU.curId)stopLog(STOPWHY||"앱 안에서 정지");STOPWHY="";aliveOff();AU.gen=(AU.gen||0)+1;if(AU.cur){AU.cur.stop();AU.cur=null;AU.stopAt=performance.now()}AU.curId=0;leanFlush();clearSleepTimer(false);setNp("■ 정지됨 — 세계에 들어가면 소리가 납니다",null,true);$("#sbplay").textContent="재생";renderChans()}
 function setNp(txt,sub,raw){const el=$("#npline");if(raw){el.textContent=txt;return}el.textContent="";el.append(txt+(sub?" ":""));if(sub){const b=document.createElement("b");b.textContent=sub;el.append(b)}}
-function mediaSession(ch){try{if(!("mediaSession" in navigator))return;navigator.mediaSession.metadata=new MediaMetadata({title:ch.full,artist:"심야접속 · SleepingBag"});navigator.mediaSession.setActionHandler("play",()=>playChannel(AU.curId||1));navigator.mediaSession.setActionHandler("pause",()=>stopAll());navigator.mediaSession.setActionHandler("stop",()=>stopAll())}catch(e){}}
+function mediaSession(ch){try{if(!("mediaSession" in navigator))return;navigator.mediaSession.metadata=new MediaMetadata({title:ch.full,artist:"심야접속 · SleepingBag"});navigator.mediaSession.setActionHandler("play",()=>playChannel(AU.curId||1));navigator.mediaSession.setActionHandler("pause",()=>{STOPWHY="시스템이 일시정지 신호를 보냄(다른 소리·알림창·이어폰 단추)";stopAll()});navigator.mediaSession.setActionHandler("stop",()=>{STOPWHY="시스템이 정지 신호를 보냄";stopAll()})}catch(e){}}
 
 /* 효과음 — 연필 사각, 막대기로 모래 긁기 (전부 합성) */
 let lastScratch=0;
@@ -751,7 +760,7 @@ function applyTimer(){
   timerEndAt=Date.now()+mins*60000;const t=AU.ctx.currentTime,end=t+mins*60,fade=Math.min(120,mins*30);
   AU.timerGain.gain.setValueAtTime(1,Math.max(t,end-fade));AU.timerGain.gain.linearRampToValueAtTime(0.0001,end);
   $("#timernote").textContent="끝날 때 2분에 걸쳐 잦아듭니다";
-  timerTick=setInterval(()=>{if(document.hidden)return;const left=timerEndAt-Date.now();if(left<=0){stopAll();return}$("#timerleft").textContent="소등까지 "+pad(Math.floor(left/3600000))+":"+pad(Math.floor(left/60000)%60)+":"+pad(Math.floor(left/1000)%60)},1000);
+  timerTick=setInterval(()=>{if(document.hidden)return;const left=timerEndAt-Date.now();if(left<=0){STOPWHY="취침 타이머";stopAll();return}$("#timerleft").textContent="소등까지 "+pad(Math.floor(left/3600000))+":"+pad(Math.floor(left/60000)%60)+":"+pad(Math.floor(left/1000)%60)},1000);
 }
 function clearSleepTimer(keep){if(timerTick){clearInterval(timerTick);timerTick=null}$("#timerleft").textContent="";timerEndAt=0;if(AU.ctx){const t=AU.ctx.currentTime;AU.timerGain.gain.cancelScheduledValues(t);AU.timerGain.gain.setValueAtTime(1,t)}if(!keep){timerIdx=0;$("#timerbtn").textContent="끄지 않음";$("#timernote").textContent=""}}
 function vuLoop(){
@@ -865,6 +874,7 @@ $("#ageno").addEventListener("click",()=>{$("#agemsg").textContent="청소년 �
 
 /* ============ 청취방 ============ */
 function renderChans(){
+  const sb=$("#shelfsnd");if(sb)sb.textContent=AU.curId?"소리 끄기":"소리 켜기";
   const box=$("#chanlist");if(!box)return;box.textContent="";
   CH.forEach(ch=>{
     const locked=chLocked(ch.id);const d=document.createElement("div");d.className="chan"+(AU.curId===ch.id?" playing":"");
@@ -876,6 +886,8 @@ function renderChans(){
   $$("[data-lk]").forEach(x=>{x.textContent=chLocked(+x.dataset.lk)?"정회원":""});
 }
 $("#sbplay").addEventListener("click",()=>{AU.curId?stopAll():playChannel(1)});
+/* 서가에서만: 바람도 소화기 음악도 끄고 조용히 읽고 쓰기. 다시 누르면 밤바람 */
+$("#shelfsnd").addEventListener("click",()=>{if(AU.curId||chip.playing)stopAll();else playChannel(4)});
 const volEl=$("#vol");volEl.value=ls.get("vol",35);
 volEl.addEventListener("input",()=>{ls.set("vol",+volEl.value);if(AU.master)AU.master.gain.setTargetAtTime(volCurve(+volEl.value),AU.ctx.currentTime,0.05)});
 $("#timerbtn").addEventListener("click",cycleTimer);
@@ -1797,7 +1809,7 @@ const shelf={poem:null,noteUnsub:null,open:null,key:"",cx:0,cy:0,cz:-150,yaw:0,p
   render(){
     if(curWorld!=="shelf"||!this.gl)return;
     const docs=this.docs(),notes=subs.notes?subs.notes.docs:[];
-    const key=docs.map(d=>d.id+":"+(d.likes||0)).join("|")+"#"+notes.map(n=>n.id).join(",")+"#"+(this.poem?this.poem.t||1:0)+"#"+(db?1:0)+(subs.poems&&subs.poems.ready?1:0)+"#"+this.flowers().length+"@"+flowerDayStart();
+    const key=docs.map(d=>d.id+":"+(d.likes||0)+":"+(d.edited||0)).join("|")+"#"+notes.map(n=>n.id).join(",")+"#"+(this.poem?this.poem.t||1:0)+"#"+(db?1:0)+(subs.poems&&subs.poems.ready?1:0)+"#"+this.flowers().length+"@"+flowerDayStart();
     if(key===this.key)return;this.key=key;
     const gl=this.gl.gl;const W=G.W,D=G.D,fl=-G.floorY,top=-G.top;const meshes=[],picks=[],lights=[];
     const add=(tex,parts,o)=>{const pos=[],nrm=[],uv=[];parts.forEach(q=>{pos.push(...q.pos);nrm.push(...q.nrm);uv.push(...q.uv)});const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);const n=pos.length/3;const data=new Float32Array(n*8);for(let i=0;i<n;i++){data.set([pos[i*3],pos[i*3+1],pos[i*3+2],nrm[i*3],nrm[i*3+1],nrm[i*3+2],uv[i*2],uv[i*2+1]],i*8)}gl.bufferData(gl.ARRAY_BUFFER,data,gl.STATIC_DRAW);meshes.push(Object.assign({buf,n,tex,tint:[1,1,1,1],emit:0,cull:true},o||{}))};
@@ -1816,7 +1828,7 @@ const shelf={poem:null,noteUnsub:null,open:null,key:"",cx:0,cy:0,cz:-150,yaw:0,p
     const S=this.slots();const bq=[];
     const hl=Math.min(12,this.floorCount("hung"));for(let k=0;k<hl;k++){const row=Math.floor(k/4);bq.push(quadOn(hf,-56+(k%4)*36,fl+23,54+row*26,34,46))}
     this.placed().forEach(({d,s})=>{const i=s;const sl=S[s],fr=slotFrame(sl);
-      const q=quadOn(fr,0,20,8,230,310);add(this.matPaper("p"+d.id+":"+(d.likes||0),d.title||(d.text||"").split("\n")[0].slice(0,18)||"무제",(d.nick||"")+" · "+fmtDate(new Date(d.t||0))+(d.likes?" · 꽃다발 "+d.likes:""),(d.text||"").split("\n").slice(0,9).join("\n"),false),[q],{emit:0.2});picks.push({q,kind:"poem",id:d.id,i});
+      const q=quadOn(fr,0,20,8,230,310);add(this.matPaper("p"+d.id+":"+(d.likes||0)+":"+(d.edited||0),d.title||(d.text||"").split("\n")[0].slice(0,18)||"무제",(d.nick||"")+" · "+fmtDate(new Date(d.t||0))+(d.likes?" · 꽃다발 "+d.likes:""),(d.text||"").split("\n").slice(0,9).join("\n"),false),[q],{emit:0.2});picks.push({q,kind:"poem",id:d.id,i});
       const lp=[fr.o[0]+fr.n[0]*150,150,fr.o[2]+fr.n[2]*150];lights.push(lp);
       const nb=Math.min(12,this.floorCount(d.id));for(let k=0;k<nb;k++){const row=Math.floor(k/4);bq.push(quadOn(fr,-56+(k%4)*36,fl+23,44+row*26,34,46))}
       this.notesOf(d.id).slice(0,12).forEach((nt,k)=>{const col=k%3,row=Math.floor(k/3);const nq=quadOn(fr,136+col*72,30-row*72,5,62,62);add(this.matNote("n"+nt.id,nt.text,nt.c||0),[nq],{emit:0.35});picks.push({q:nq,kind:"note",id:nt.id})});
@@ -2091,7 +2103,7 @@ function tick(){
   $$(".leanline").forEach(x=>{x.textContent=leanLine()});
 }
 setInterval(tick,1000);
-document.addEventListener("visibilitychange",()=>{leanFlush();if(!document.hidden){tick();if(timerEndAt&&Date.now()>=timerEndAt)stopAll()}});
+document.addEventListener("visibilitychange",()=>{leanFlush();if(!document.hidden){tick();if(timerEndAt&&Date.now()>=timerEndAt){STOPWHY="취침 타이머";stopAll()}}});
 addEventListener("resize",()=>{if(curWorld==="beach")beach.renderTraces()});
 
 /* ============ 시작 ============ */
