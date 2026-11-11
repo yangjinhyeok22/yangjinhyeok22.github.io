@@ -206,6 +206,25 @@ button.li:active,a.li:active{background:#fff0a8}
 .toast{position:absolute;left:50%;top:84px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:4px 8px;white-space:nowrap;animation:toast 1.3s steps(8) forwards}
 .pop{position:absolute;color:var(--red);white-space:nowrap;animation:pop .55s steps(8) forwards}
 
+/* 여는 화면 */
+.sp{position:absolute;inset:0;z-index:10;overflow:hidden;background:var(--paper);transition:transform .3s cubic-bezier(.65,0,.25,1)}
+#lcd2 .sp{background:var(--paper-2)}
+.sp.out{transform:translateY(-102%)}
+#lcd2 .sp.out{transform:translateY(102%)}
+.spl{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:30px}
+.spl span{display:block;white-space:nowrap}
+.s1{font-size:64px;line-height:64px}
+.s2{font-size:48px;line-height:48px}
+.s2.r{color:var(--red)}
+.sp.on .spl{animation:spglow .8s cubic-bezier(.16,.8,.2,1) both}
+.sp.hit .spl{animation:sphit .24s cubic-bezier(.3,1.6,.5,1) 1}
+.spi,.spn{position:absolute;left:0;top:0;width:256px;height:192px}
+.spn{image-rendering:pixelated}
+.spf{position:absolute;inset:0;opacity:0;background:radial-gradient(circle at 50% 50%,#fff 0%,#fffdf0 55%,#fff3c4 100%)}
+.spp{position:absolute;left:0;top:0;width:0;height:0;transform-origin:0 0}
+.spp svg{position:absolute;left:0;top:-5px;width:52px;height:10px;overflow:visible}
+@keyframes spglow{from{transform:scale(1.14);filter:blur(2px) brightness(1.8)}60%{filter:blur(0) brightness(1.15)}to{transform:none;filter:none}}
+@keyframes sphit{from{transform:scale(1)}45%{transform:scale(1.06)}to{transform:scale(1)}}
 @keyframes blink{50%{opacity:.25}}
 @keyframes slide{from{transform:translateX(40px);opacity:0}to{transform:none;opacity:1}}
 @keyframes rise{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
@@ -215,6 +234,7 @@ button.li:active,a.li:active{background:#fff0a8}
 @keyframes stamp{from{transform:rotate(-12deg) scale(2.2);opacity:0}to{transform:rotate(-12deg) scale(1);opacity:1}}
 @keyframes toast{0%{opacity:0}12%{opacity:1}80%{opacity:1}100%{opacity:0}}
 @media (prefers-reduced-motion:reduce){
+  .sp{transition:opacity .2s linear}.sp.out,#lcd2 .sp.out{transform:none;opacity:0}.sp.on .spl,.sp.hit .spl{animation:none}
   .in .pp,.in .wn,.in .msg,.in2 .opt,.shake,.stamp,.wn.hot,.wc.q.fix{animation:none}
   .wc.q.ask.mid{animation:none}
 }
@@ -899,7 +919,7 @@ var CONFIG = {
   tag: '맞춤맞춤법게임',          // 공유 문구 해시태그(스레드는 주제 태그)
   appUrl: 'https://yangjinhyeok22.github.io/machumlaw/',                     // 공개 주소. 넣으면 공유 문구 맨 아래에 붙는다.
   dayOne: '2026-11-11',           // 제1회 날짜(한국 시간)
-  version: 'v0.1',
+  version: 'v0.4',
   boxDays: [0, 1, 3, 7, 21],      // 오답 상자 칸별 복습 간격(일). 21일까지 맞히면 졸업.
   reviewCap: 8,                   // 하루 훈련에 끼워 넣는 복습 문제 최대 개수
   support: { opensOn: '2027-02-11', links: [] }  // links: [{name:'토스', url:'https://…'}]. 비어 있으면 날짜가 돼도 안 뜬다.
@@ -1230,6 +1250,24 @@ if (typeof module !== 'undefined') module.exports = {
     buzz: function () { var ac = audio(); if (!ac) return; var t = ac.currentTime + 0.005; note(160, t, 0.2, 'sawtooth', 0.13, 80); },
     tap: function () { var ac = audio(); if (!ac) return; note(1100, ac.currentTime + 0.002, 0.03, 'square', 0.035); },
     warn: function () { var ac = audio(); if (!ac) return; var t = ac.currentTime + 0.005; note(196, t, 0.08, 'square', 0.07); note(196, t + 0.12, 0.08, 'square', 0.07); },
+    hiss: function (dur) {   // 지지직: 방송이 안 잡히는 화면 소리
+      var ac = audio(); if (!ac) return;
+      var t = ac.currentTime + 0.005, src = ac.createBufferSource(); src.buffer = noise; src.loop = true;
+      var bp = ac.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 2400; bp.Q.value = 0.4;
+      var g = ac.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.11, t + 0.03);
+      g.gain.setValueAtTime(0.11, t + dur * 0.7); g.gain.linearRampToValueAtTime(0.2, t + dur); g.gain.linearRampToValueAtTime(0.0001, t + dur + 0.05);
+      src.connect(bp); bp.connect(g); g.connect(master); src.start(t, Math.random()); src.stop(t + dur + 0.1);
+    },
+    bloom: function () {     // 화면이 밝아질 때: 낮게 울리고 화음이 번진다
+      var ac = audio(); if (!ac) return; var t = ac.currentTime + 0.005;
+      note(110, t, 0.5, 'sine', 0.4, 52);
+      [523.25, 659.25, 783.99, 1046.5].forEach(function (f, i) {
+        var o = ac.createOscillator(), g = ac.createGain(); o.type = 'sine'; o.frequency.value = f;
+        g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(0.07 - i * 0.012, t + 0.12 + i * 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.5);
+        o.connect(g); g.connect(master); o.start(t); o.stop(t + 1.6);
+      });
+    },
+    fanfare: function () { var ac = audio(); if (!ac) return; var t = ac.currentTime + 0.005; note(783.99, t, 0.09, 'triangle', 0.2); note(1046.5, t + 0.08, 0.09, 'triangle', 0.2); note(1318.5, t + 0.16, 0.34, 'triangle', 0.2); },
     thump: function () { var ac = audio(); if (!ac) return; var t = ac.currentTime + 0.005; note(150, t, 0.2, 'sine', 0.5, 45); Snd.scratch(0.05, 0.25, 1); }
   };
 
@@ -1247,11 +1285,11 @@ if (typeof module !== 'undefined') module.exports = {
   }
   // 6을 거꾸로 쓰는 획: 왼쪽 위에서 시작해 고리를 한 바퀴 돌고, 지나친 끝을 위로 치켜 올린다
   function ringPts(box) {
-    var cx = box.x + box.w / 2, cy = box.y + box.h / 2, rx = Math.max(24, box.w / 2 + 10), ry = Math.max(17, box.h / 2 + 8);
+    var cx = box.x + box.w / 2, cy = box.y + box.h / 2, rx = box.rx || Math.max(28, box.w / 2 + 12), ry = box.ry || Math.max(22, box.h / 2 + 12, (box.w / 2 + 12) * 0.62);
     var tilt = -0.1 + (Math.random() - 0.5) * 0.1, ph = Math.random() * 6.28, pts = [];
     function add(th, s) { var x = Math.cos(th) * rx * s, y = Math.sin(th) * ry * s; pts.push({ x: cx + x * Math.cos(tilt) - y * Math.sin(tilt), y: cy + x * Math.sin(tilt) + y * Math.cos(tilt) }); }
-    var N = 56, T0 = Math.PI * 0.12, SW = Math.PI * 2.4, i, th;
-    for (i = 0; i <= N; i++) { var t = i / N; th = T0 + SW * t; add(th, (0.93 + 0.07 * Math.min(1, t * 5)) * (1 + 0.04 * Math.sin(th * 2.1 + ph) + 0.025 * Math.sin(th * 3.7 + ph * 2))); }
+    var N = 56, T0 = Math.PI * 0.56, SW = Math.PI * 2.04, i, th;
+    for (i = 0; i <= N; i++) { var t = i / N; th = T0 + SW * t; add(th, (0.9 + 0.1 * Math.min(1, t * 4)) * (1 + 0.04 * Math.sin(th * 2.1 + ph) + 0.025 * Math.sin(th * 3.7 + ph * 2))); }
     th = T0 + SW;
     for (i = 1; i <= 6; i++) { th += 0.08; add(th, 1 + 0.02 * i + 0.003 * i * i); }
     return pts;
@@ -1261,19 +1299,20 @@ if (typeof module !== 'undefined') module.exports = {
     for (var i = 0; i <= 14; i++) { var t = i / 14; pts.push({ x: x0 + (x1 - x0) * t + Math.sin(t * 3.14) * 3, y: y0 + (y1 - y0) * t }); }
     return pts;
   }
-  function seg(a, b) {
+  function seg(a, b, g, m) {
+    g = g || g2d; m = m || 1;
     for (var k = 0; k < 3; k++) {   // 굵기와 진하기가 다른 선을 세 겹: 색연필 결
-      var ox = (Math.random() - 0.5) * 2.4, oy = (Math.random() - 0.5) * 2.4;
-      g2d.beginPath(); g2d.moveTo(a.x * IR + ox, a.y * IR + oy); g2d.lineTo(b.x * IR + ox, b.y * IR + oy);
-      g2d.lineWidth = IR * (1.5 + Math.random() * 1.5); g2d.lineCap = 'round';
-      g2d.strokeStyle = 'rgba(214,48,40,' + (0.42 + Math.random() * 0.36) + ')'; g2d.stroke();
+      var ox = (Math.random() - 0.5) * 2.4 * m, oy = (Math.random() - 0.5) * 2.4 * m;
+      g.beginPath(); g.moveTo(a.x * IR + ox, a.y * IR + oy); g.lineTo(b.x * IR + ox, b.y * IR + oy);
+      g.lineWidth = IR * m * (1.5 + Math.random() * 1.5); g.lineCap = 'round';
+      g.strokeStyle = 'rgba(214,48,40,' + (0.42 + Math.random() * 0.36) + ')'; g.stroke();
     }
-    g2d.globalCompositeOperation = 'destination-out';   // 종이 결에 걸려 덜 칠해진 자리
-    for (var j = 0; j < 5; j++) {
-      var t = Math.random(), x = (a.x + (b.x - a.x) * t) * IR + (Math.random() - 0.5) * 9, y = (a.y + (b.y - a.y) * t) * IR + (Math.random() - 0.5) * 9;
-      g2d.fillStyle = 'rgba(0,0,0,' + (0.5 + Math.random() * 0.5) + ')'; g2d.fillRect(x, y, 1 + Math.random() * 1.6, 1 + Math.random() * 1.6);
+    g.globalCompositeOperation = 'destination-out';   // 종이 결에 걸려 덜 칠해진 자리
+    for (var j = 0; j < 5 * m; j++) {
+      var t = Math.random(), x = (a.x + (b.x - a.x) * t) * IR + (Math.random() - 0.5) * 9 * m, y = (a.y + (b.y - a.y) * t) * IR + (Math.random() - 0.5) * 9 * m;
+      g.fillStyle = 'rgba(0,0,0,' + (0.5 + Math.random() * 0.5) + ')'; g.fillRect(x, y, 1 + Math.random() * 1.6, 1 + Math.random() * 1.6);
     }
-    g2d.globalCompositeOperation = 'source-over';
+    g.globalCompositeOperation = 'source-over';
   }
   function stroke(pts, dur) {
     var my = ++drawing;
@@ -1704,7 +1743,7 @@ if (typeof module !== 'undefined') module.exports = {
   var HOW_INSTALL = {
     ios: '사파리 아래쪽 공유 버튼을 누르고 ‘홈 화면에 추가’를 고르세요.',
     'ios-chrome': '주소창 오른쪽 공유 버튼을 누르고 ‘홈 화면에 추가’를 고르세요.',
-    android: '오른쪽 위 ⋮ 메뉴에서 ‘홈 화면에 추가’ 또는 ‘앱 설치’를 고르세요.',
+    android: '모바일 크롬(갤럭시 기준): 오른쪽 위 점 세 개 버튼 → ‘설치 및 다운로드’를 누르세요. 안 보이면 ‘홈 화면에 추가’를 고르세요.',
     samsung: '아래쪽 ≡ 메뉴에서 ‘현재 페이지 추가’ → ‘홈 화면’을 고르세요.',
     chrome: '주소창 오른쪽 끝의 설치 아이콘을 누르세요.', edge: '주소창 오른쪽 … 메뉴에서 ‘앱’ → ‘이 사이트를 앱으로 설치’를 고르세요.',
     whale: '주소창 오른쪽 설치 아이콘을 누르세요.', safari: '메뉴 막대의 ‘파일’ → ‘Dock에 추가’를 고르세요.',
@@ -1725,10 +1764,10 @@ if (typeof module !== 'undefined') module.exports = {
   VIEWS.app = {
     top: function () {
       var t = V.tab || 'menu', pf = platform(), h = hd(t === 'home' ? '첫 페이지로' : '앱으로 설치', '');
-      if (t === 'menu') return h + '<div class="tx" style="top:28px">가입도 서버도 없이 이 기기 안에서만 돌아갑니다. 설치하면 인터넷이 없어도 열립니다.</div><div class="tx dim" style="top:110px">' + esc(HOME_URL.replace('https://', '')) + '</div>';
+      if (t === 'menu') return h + '<div class="tx" style="top:28px">가입도 서버도 없이 이 기기 안에서만 돌아갑니다. 설치하면 인터넷이 없어도 열립니다.</div><div class="tx dim" style="top:104px">' + esc(HOME_URL.replace('https://', '')) + '</div><div class="tx dim" style="top:164px">버전 ' + CONFIG.version + '</div>';
       if (t === 'install') {
         if (installed()) return h + '<div class="tx" style="top:30px">이미 앱으로 열려 있습니다.</div>';
-        if (!onSite()) return h + '<div class="tx" style="top:30px">설치는 정식 주소에서 됩니다. 아래 버튼으로 연 다음, 다시 ‘앱 설치’를 누르세요.</div>';
+        if (!onSite()) return h + '<div class="tx" style="top:28px">정식 주소에서 열고 이렇게 하세요.</div><div class="tx dim" style="top:76px">' + esc(HOW_INSTALL[pf] || HOW_INSTALL.other) + '</div>';
         return h + '<div class="tx" style="top:30px">' + esc(HOW_INSTALL[pf] || HOW_INSTALL.other) + '</div>';
       }
       return h + '<div class="tx" style="top:28px">' + esc(HOW_HOME[pf] || HOW_HOME.other) + '</div><div class="tx dim" style="top:130px">브라우저를 켤 때마다 오늘의 다섯 문제가 먼저 뜹니다.</div>';
@@ -1772,6 +1811,7 @@ if (typeof module !== 'undefined') module.exports = {
     fadd: function (d) { if (addFromFind(S, d.e, tIdx())) { save(); toast('내일 다시 묻습니다'); } drawFind(); }
   };
   document.addEventListener('click', function (ev) {
+    if (SP) { ev.preventDefault(); return endSplash(); }
     var el = ev.target.closest ? ev.target.closest('[data-a],[data-k]') : null;
     if (!el || !dev.contains(el)) return;
     if (el.dataset.k) return key(el.dataset.k);
@@ -1782,7 +1822,8 @@ if (typeof module !== 'undefined') module.exports = {
   });
   function key(k) {
     if (k === 'snd') { S.snd = !S.snd; save(); $('kSnd').classList.toggle('off', !S.snd); toast(S.snd ? '소리 켬' : '소리 끔'); if (S.snd) Snd.ding(0); return; }
-    if (k === 'menu') { Snd.tap(); return ACT.home(); }
+    if (SP) return endSplash();
+    if (k === 'menu') { if (V.name === 'home' && !ses) return splash(render); Snd.tap(); return ACT.home(); }   // 첫 화면에서 메뉴를 누르면 여는 화면을 다시 본다
     if (V.name === 'quiz' && ses) {
       if (ses.phase === 'ask') { if (k === 'a' || k === 'up' || k === 'left') answer(0); else if (k === 'b' || k === 'down' || k === 'right') answer(1); }
       else if (ses.phase === 'wrong' && (k === 'a' || k === 'ok' || k === 'right')) { Snd.tap(); nextQ(); }
@@ -1795,6 +1836,7 @@ if (typeof module !== 'undefined') module.exports = {
   var KEYMAP = { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right', '1': 'a', '2': 'b', Enter: 'ok', ' ': 'ok', Escape: 'menu' };
   document.addEventListener('keydown', function (ev) {
     if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+    if (SP) { ev.preventDefault(); return endSplash(); }
     var tg = ev.target, typing = tg && (tg.tagName === 'INPUT' || tg.tagName === 'TEXTAREA');
     if (typing && ev.key !== 'Escape') return;
     var k = KEYMAP[ev.key]; if (!k) return;
@@ -1805,14 +1847,93 @@ if (typeof module !== 'undefined') module.exports = {
     key(k);
   });
 
+  /* ---------- 여는 화면: 지지직 → 빛 → 맞춤! / 맞춤법 게임! → 싹 싹 싹 ---------- */
+  var SP = null;
+  var SP_T = { flashUp: 620, lit: 900, settle: 1350, strokes: [1380, 1730, 2070], hit: 2340, end: 3000 };
+  function rectIn(el, lcd) { var o = lcd.getBoundingClientRect(), k = o.width / 256, r = el.getBoundingClientRect(); return { x: (r.left - o.left) / k, y: (r.top - o.top) / k, w: r.width / k, h: r.height / k }; }
+  function drawNoise(L, t) {
+    var d = L.buf, n = d.length, roll = Math.floor((t * 0.11) % 96), tear = Math.random() < 0.12 ? Math.floor(Math.random() * 96) : -1;
+    for (var i = 0; i < n; i++) {
+      var y = (i / 128) | 0, v = (Math.random() * 235) | 0, dy = (y - roll + 96) % 96;
+      if (dy < 10) v = Math.min(255, v + 90 - dy * 9);          // 위에서 아래로 흐르는 밝은 띠
+      if (y === tear || y === tear + 1) v = v > 110 ? 255 : 20; // 가끔 찢어지는 가로줄
+      d[i] = 0xff000000 | (v << 16) | (v << 8) | v;
+    }
+    L.ng.putImageData(L.img, 0, 0);
+  }
+  function spStroke(i) {
+    var L = SP.layers[i ? 1 : 0], el = $('spw' + i); if (!el) return;
+    var b = rectIn(el, L.lcd); b.rx = b.w / 2 * 1.24 + 4; b.ry = b.h / 2 * (i ? 1.3 : 1.42) + 2;
+    var pts = ringPts(b), dur = REDUCE ? 1 : 250, t0 = performance.now(), drawn = 0, me = SP;
+    if (SP.loud) Snd.scratch(0.27, 0.5, 4);
+    L.pen.hidden = false;
+    (function step(now) {
+      if (SP !== me || me.dead) return;
+      var p = Math.max(0, Math.min(1, (now - t0) / dur)), e = 0.55 * p * p * (3 - 2 * p) + 0.45 * Math.pow(p, 1.5);
+      var upto = Math.max(1, Math.round(e * (pts.length - 1)));
+      for (var k = drawn; k < upto; k++) seg(pts[k], pts[k + 1], L.g, 2);
+      drawn = upto;
+      var tip = pts[upto];
+      L.pen.style.transform = 'translate(' + tip.x.toFixed(1) + 'px,' + tip.y.toFixed(1) + 'px) rotate(' + (-40 + Math.sin(now / 22) * 5).toFixed(1) + 'deg) scale(1.6)';
+      if (p < 1) return requestAnimationFrame(step);
+      setTimeout(function () { L.pen.hidden = true; }, 90);
+    })(t0);
+  }
+  function splash(done) {
+    if (SP) return;
+    clearInk();
+    var me = SP = { dead: false, next: 0, lit: false, hit: false, done: done, t0: performance.now() - (REDUCE ? SP_T.settle : 0) };
+    me.loud = !!(S.snd && (AC || (navigator.userActivation && navigator.userActivation.hasBeenActive)));   // 누른 적이 없으면 브라우저가 소리를 막는다
+    me.layers = [lcd1, $('lcd2')].map(function (lcd, i) {
+      var d = document.createElement('div'); d.className = 'sp' + (REDUCE ? ' on' : '');
+      d.innerHTML = '<div class="spl">' + (i ? '<span class="s2" id="spw1">맞춤법</span><span class="s2 r" id="spw2">게임!</span>' : '<span class="s1" id="spw0">맞춤!</span>') + '</div>' +
+        '<canvas class="spi" width="768" height="576"></canvas><div class="spp" hidden>' + pen.innerHTML + '</div><canvas class="spn" width="128" height="96"' + (REDUCE ? ' hidden' : '') + '></canvas><div class="spf"></div>';
+      lcd.appendChild(d);
+      var nc = d.querySelector('.spn'), ng = nc.getContext('2d'), img = ng.createImageData(128, 96);
+      return { lcd: lcd, el: d, g: d.querySelector('.spi').getContext('2d'), pen: d.querySelector('.spp'), noise: nc, ng: ng, img: img, buf: new Uint32Array(img.data.buffer), flash: d.querySelector('.spf') };
+    });
+    if (!REDUCE) { me.layers.forEach(function (L) { drawNoise(L, 0); }); if (me.loud) Snd.hiss(SP_T.lit / 1000); }
+    var lastNoise = 0;
+    (function loop(now) {
+      if (SP !== me || me.dead) return;
+      var t = now - me.t0;
+      if (t < SP_T.lit) {
+        if (now - lastNoise > 33) { lastNoise = now; me.layers.forEach(function (L) { drawNoise(L, t); }); }
+        var up = Math.max(0, (t - SP_T.flashUp) / (SP_T.lit - SP_T.flashUp));
+        me.layers.forEach(function (L) { L.flash.style.opacity = (up * up).toFixed(3); });
+      } else {
+        if (!me.lit) { me.lit = true; me.layers.forEach(function (L) { L.noise.hidden = true; L.el.classList.add('on'); }); if (me.loud && !REDUCE) Snd.bloom(); }
+        var dn = Math.min(1, (t - SP_T.lit) / (SP_T.settle - SP_T.lit));
+        me.layers.forEach(function (L) { L.flash.style.opacity = REDUCE ? '0' : Math.pow(1 - dn, 2.2).toFixed(3); });
+      }
+      while (me.next < 3 && t >= SP_T.strokes[me.next]) spStroke(me.next++);
+      if (!me.hit && t >= SP_T.hit) { me.hit = true; me.layers.forEach(function (L) { L.el.classList.add('hit'); }); if (me.loud) Snd.fanfare(); }
+      if (t >= SP_T.end) return endSplash();
+      requestAnimationFrame(loop);
+    })(performance.now());
+  }
+  function endSplash() {
+    var me = SP; if (!me || me.dead) return;
+    me.dead = true; SP = null;
+    me.done();                                   // 아래에 첫 화면을 먼저 그려 놓고 막을 걷는다
+    me.layers.forEach(function (L) { L.el.classList.add('out'); });
+    setTimeout(function () { me.layers.forEach(function (L) { if (L.el.parentNode) L.el.parentNode.removeChild(L.el); }); }, 320);
+  }
+
   /* ---------- 시작 ---------- */
   $('kSnd').classList.toggle('off', !S.snd);
   fit(); window.addEventListener('resize', fit);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
   // 훈련 도중 페이지가 다시 열리면(새 버전 반영, 앱 전환 등) 첫 화면 대신 하던 문제로 돌아간다
-  if ('serviceWorker' in navigator && onSite()) { try { navigator.serviceWorker.register('sw.js').catch(function () { /* 오프라인 실행만 빠진다 */ }); } catch (e) { /* 위와 같음 */ } }
-  if (S.cur && S.cur.key === tKey() && S.cur.res.length > 0 && !S.days[tKey()]) startDaily(); else render();
-  window.__mm = { state: function () { return S; }, ses: function () { return ses; }, go: go, answer: answer, next: nextQ, shiftDays: function (n) { shift = n * 86400000; }, reset: function () { S = fresh(); save(); ses = null; last = null; go('home'); }, entries: function () { return BANK; } };
+  var hgLabel = dev.querySelector('.hg span'); if (hgLabel) hgLabel.textContent = CONFIG.name + ' ' + CONFIG.version;   // 어느 판이 떠 있는지 눈으로 확인하는 자리
+  // 서비스 워커는 페이지를 받을 때마다 서버에 새 판이 있는지 묻는다. 그래서 새로 열면 늘 최신 판이 뜬다.
+  if ('serviceWorker' in navigator && onSite()) {
+    try { navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(function () { /* 오프라인 실행만 빠진다 */ }); } catch (e) { /* 위와 같음 */ }
+  }
+  if (S.cur && S.cur.key === tKey() && S.cur.res.length > 0 && !S.days[tKey()]) startDaily();
+  else if (window.__mmNoSplash) render();
+  else splash(render);
+  window.__mm = { splash: function () { splash(render); }, splashing: function () { return !!SP; }, state: function () { return S; }, ses: function () { return ses; }, go: go, answer: answer, next: nextQ, shiftDays: function (n) { shift = n * 86400000; }, reset: function () { S = fresh(); save(); ses = null; last = null; go('home'); }, entries: function () { return BANK; } };
 })();
 
 </script>
