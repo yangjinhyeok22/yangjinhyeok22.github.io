@@ -9,6 +9,15 @@
 <meta property="og:description" content="하루 다섯 문제, 틀린 말은 1·3·7·21일 뒤에 다시. 가입 없는 맞춤법 게임.">
 <meta property="og:url" content="https://yangjinhyeok22.github.io/machumlaw/">
 <meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://yangjinhyeok22.github.io/machumlaw/icon-512.png">
+<meta name="theme-color" content="#131923">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="맞춤법 게임">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
 </head>
 <body>
@@ -1331,8 +1340,7 @@ if (typeof module !== 'undefined') module.exports = {
       var h = '<button type="button" class="btn big redb" data-main="1" data-a="' + main[0] + '" style="left:10px;top:8px;width:236px;height:56px"><b>' + main[1] + '</b><i>' + main[2] + '</i></button>' +
         btn('box', '오답 상자' + (due ? '<em>' + due + '</em>' : ''), 10, 74, 114, 34) + btn('find', '맞춤법 찾기', 132, 74, 114, 34) +
         btn('endless', '끝까지 도전', 10, 118, 114, 34) + btn('cal', '도장 달력', 132, 118, 114, 34);
-      if (supportOpen()) h += btn('lab', '정말 늘까요? ▶', 4, 162, 150, 24, 'ghost') + btn('sup', '후원하기', 160, 162, 92, 24, 'ghost');
-      else h += btn('lab', '정말 늘까요? 논문 보기 ▶', 8, 162, 240, 24, 'ghost');
+      h += btn('lab', '정말 늘까요? ▶', 2, 162, 132, 24, 'ghost') + btn('app', supportOpen() ? '앱·후원 ▶' : '앱 설치 ▶', 134, 162, 120, 24, 'ghost');
       return h;
     },
     after: function () {
@@ -1676,6 +1684,70 @@ if (typeof module !== 'undefined') module.exports = {
       return h + '</div>' + btn('lab', '◀ 목록', 10, 164, 114, 22, '', 'data-main="1"') + (i < LAB.length - 1 ? btn('labt', '다음 ▶', 132, 164, 114, 22, '', 'data-i="' + (i + 1) + '"') : btn('home', '처음으로', 132, 164, 114, 22));
     }
   };
+  /* ---------- 앱으로 설치, 첫 페이지로 ---------- */
+  var HOME_URL = 'https://yangjinhyeok22.github.io/machumlaw/', installEvt = null;
+  window.addEventListener('beforeinstallprompt', function (e) { e.preventDefault(); installEvt = e; });
+  window.addEventListener('appinstalled', function () { installEvt = null; toast('설치했습니다'); });
+  function onSite() { return location.hostname === 'yangjinhyeok22.github.io'; }
+  function installed() { try { return matchMedia('(display-mode: standalone)').matches || navigator.standalone === true; } catch (e) { return false; } }
+  function platform() {
+    var u = navigator.userAgent;
+    if (/iPhone|iPad|iPod/.test(u) || (/Macintosh/.test(u) && navigator.maxTouchPoints > 1)) return /CriOS/.test(u) ? 'ios-chrome' : 'ios';
+    if (/Android/.test(u)) return /SamsungBrowser/.test(u) ? 'samsung' : 'android';
+    if (/Edg\//.test(u)) return 'edge';
+    if (/Whale\//.test(u)) return 'whale';
+    if (/Firefox\//.test(u)) return 'firefox';
+    if (/Chrome\//.test(u)) return 'chrome';
+    if (/Safari\//.test(u)) return 'safari';
+    return 'other';
+  }
+  var HOW_INSTALL = {
+    ios: '사파리 아래쪽 공유 버튼을 누르고 ‘홈 화면에 추가’를 고르세요.',
+    'ios-chrome': '주소창 오른쪽 공유 버튼을 누르고 ‘홈 화면에 추가’를 고르세요.',
+    android: '오른쪽 위 ⋮ 메뉴에서 ‘홈 화면에 추가’ 또는 ‘앱 설치’를 고르세요.',
+    samsung: '아래쪽 ≡ 메뉴에서 ‘현재 페이지 추가’ → ‘홈 화면’을 고르세요.',
+    chrome: '주소창 오른쪽 끝의 설치 아이콘을 누르세요.', edge: '주소창 오른쪽 … 메뉴에서 ‘앱’ → ‘이 사이트를 앱으로 설치’를 고르세요.',
+    whale: '주소창 오른쪽 설치 아이콘을 누르세요.', safari: '메뉴 막대의 ‘파일’ → ‘Dock에 추가’를 고르세요.',
+    firefox: '파이어폭스는 앱 설치를 지원하지 않습니다. 크롬이나 엣지에서 열어 주세요.', other: '브라우저 메뉴에서 ‘홈 화면에 추가’를 찾아 주세요.'
+  };
+  var HOW_HOME = {
+    chrome: '설정 → 시작 그룹 → ‘특정 페이지 또는 페이지 모음 열기’ → 페이지 추가에 주소를 붙여 넣으세요.',
+    edge: '설정 → 시작, 홈 및 새 탭 → ‘다음 페이지 열기’ → 새 페이지 추가에 주소를 붙여 넣으세요.',
+    whale: '설정 → 시작 그룹 → ‘특정 페이지 열기’에 주소를 붙여 넣으세요.',
+    safari: '설정 → 일반 → 홈페이지에 주소를 붙여 넣고, 새 윈도우를 ‘홈페이지’로 고르세요.',
+    firefox: '설정 → 홈 → 홈페이지 및 새 창 → ‘사용자 지정 URL’에 주소를 붙여 넣으세요.',
+    samsung: '≡ 메뉴 → 설정 → 홈페이지 → ‘사용자 지정’에 주소를 붙여 넣으세요.',
+    android: '휴대폰 크롬은 첫 페이지를 바꿀 수 없습니다. 홈 화면에 앱으로 설치하는 편이 빠릅니다.',
+    ios: '아이폰 사파리는 첫 페이지를 바꿀 수 없습니다. 홈 화면에 추가하는 편이 빠릅니다.',
+    'ios-chrome': '아이폰 크롬은 첫 페이지를 바꿀 수 없습니다. 홈 화면에 추가하는 편이 빠릅니다.',
+    other: '브라우저 설정의 ‘시작 페이지’나 ‘홈페이지’에 주소를 붙여 넣으세요.'
+  };
+  VIEWS.app = {
+    top: function () {
+      var t = V.tab || 'menu', pf = platform(), h = hd(t === 'home' ? '첫 페이지로' : '앱으로 설치', '');
+      if (t === 'menu') return h + '<div class="tx" style="top:28px">가입도 서버도 없이 이 기기 안에서만 돌아갑니다. 설치하면 인터넷이 없어도 열립니다.</div><div class="tx dim" style="top:110px">' + esc(HOME_URL.replace('https://', '')) + '</div>';
+      if (t === 'install') {
+        if (installed()) return h + '<div class="tx" style="top:30px">이미 앱으로 열려 있습니다.</div>';
+        if (!onSite()) return h + '<div class="tx" style="top:30px">설치는 정식 주소에서 됩니다. 아래 버튼으로 연 다음, 다시 ‘앱 설치’를 누르세요.</div>';
+        return h + '<div class="tx" style="top:30px">' + esc(HOW_INSTALL[pf] || HOW_INSTALL.other) + '</div>';
+      }
+      return h + '<div class="tx" style="top:28px">' + esc(HOW_HOME[pf] || HOW_HOME.other) + '</div><div class="tx dim" style="top:130px">브라우저를 켤 때마다 오늘의 다섯 문제가 먼저 뜹니다.</div>';
+    },
+    bot: function () {
+      var t = V.tab || 'menu', h = '';
+      if (t === 'menu') {
+        h = btn('appi', '앱으로 설치', 10, 8, 236, 36, 'redb', 'data-main="1"') + btn('apph', '브라우저 첫 페이지로', 10, 54, 236, 34);
+        var i = 0; if (supportOpen()) (CONFIG.support.links || []).slice(0, 1).forEach(function (l) { h += lnk(l.url, '후원하기 ▶', 10, 98, 236, 30); i++; });
+        return h + btn('home', '처음으로', 10, 156, 236, 28);
+      }
+      if (t === 'install') {
+        if (installEvt && !installed()) h = btn('appgo', '지금 설치', 10, 8, 236, 40, 'redb', 'data-main="1"');
+        else if (!onSite()) h = lnk(HOME_URL, '정식 주소 열기 ▶', 10, 8, 236, 40, 'redb');
+        return h + btn('app', '◀ 뒤로', 10, 156, 236, 28);
+      }
+      return btn('appc', '주소 복사', 10, 8, 236, 40, 'redb', 'data-main="1"') + (onSite() ? '' : lnk(HOME_URL, '정식 주소 열기 ▶', 10, 58, 236, 34)) + btn('app', '◀ 뒤로', 10, 156, 236, 28);
+    }
+  };
   VIEWS.sup = {
     top: function () { return hd('후원', '') + '<div class="tx" style="top:30px">광고도 가입도 없이 돌아가는 게임입니다. 도움이 됐다면 색연필 한 자루 값으로 응원해 주세요.</div>'; },
     bot: function () { var h = ''; (CONFIG.support.links || []).slice(0, 4).forEach(function (l, i) { h += lnk(l.url, esc(l.name) + ' ▶', 10, 8 + i * 38, 236, 28); }); return h + btn('home', '처음으로', 10, 162, 236, 22); }
@@ -1688,6 +1760,9 @@ if (typeof module !== 'undefined') module.exports = {
     box: function () { go('box'); }, find: function () { go('find'); }, cal: function () { go('cal', { off: 0 }); },
     calp: function () { go('cal', { off: (V.off || 0) - 1 }); }, caln: function () { go('cal', { off: Math.min(0, (V.off || 0) + 1) }); },
     lab: function () { go('lab', { topic: -1 }); }, labt: function (d) { go('lab', { topic: +d.i }); }, sup: function () { go('sup'); },
+    app: function () { go('app', { tab: 'menu' }); }, appi: function () { go('app', { tab: 'install' }); }, apph: function () { go('app', { tab: 'home' }); },
+    appc: function () { copyText(HOME_URL); },
+    appgo: function () { if (!installEvt) return; var e = installEvt; installEvt = null; e.prompt(); e.userChoice.then(function () { render(); }, function () { render(); }); },
     home: function () { if (ses) clearTimeout(ses.to); ses = null; go('home'); },
     ans: function (d) { answer(+d.i); }, next: nextQ,
     look: function () { go('look', { i: 0 }); }, looki: function (d) { go('look', { i: +d.i }); },
@@ -1735,6 +1810,7 @@ if (typeof module !== 'undefined') module.exports = {
   fit(); window.addEventListener('resize', fit);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
   // 훈련 도중 페이지가 다시 열리면(새 버전 반영, 앱 전환 등) 첫 화면 대신 하던 문제로 돌아간다
+  if ('serviceWorker' in navigator && onSite()) { try { navigator.serviceWorker.register('sw.js').catch(function () { /* 오프라인 실행만 빠진다 */ }); } catch (e) { /* 위와 같음 */ } }
   if (S.cur && S.cur.key === tKey() && S.cur.res.length > 0 && !S.days[tKey()]) startDaily(); else render();
   window.__mm = { state: function () { return S; }, ses: function () { return ses; }, go: go, answer: answer, next: nextQ, shiftDays: function (n) { shift = n * 86400000; }, reset: function () { S = fresh(); save(); ses = null; last = null; go('home'); }, entries: function () { return BANK; } };
 })();
