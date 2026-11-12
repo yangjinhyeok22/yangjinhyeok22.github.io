@@ -7,8 +7,23 @@
 <meta name="description" content="잠 못 드는 밤을 위한 핑크노이즈 방송국. 100% 무료, 광고 없음, 가입 없음. 1990년대 PC통신처럼 접속하는 수면 웹앱.">
 <meta name="theme-color" content="#000000">
 <meta property="og:title" content="수면 PC통신 — 심야접속">
-<meta property="og:description" content="잠 못 드는 밤을 위한 핑크노이즈 방송국. 100% 무료, 광고 없음, 가입 없음.">
-<meta property="og:image" content="icon-512.png">
+<meta property="og:description" content="잠 못 드는 밤을 위한 핑크노이즈 방송국. 100% 무료, 광고 없음, 가입 없음. 1990년대 PC통신처럼 접속하는 수면 웹앱.">
+<meta property="og:image" content="https://yangjinhyeok22.github.io/og.png">
+<meta property="og:image:type" content="image/png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="검은 화면에 초승달과 PC통신 접속 기록 — 수면 PC통신 심야접속, 잠 못 드는 밤을 위한 핑크노이즈 방송국">
+<meta property="og:url" content="https://yangjinhyeok22.github.io/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="심야접속">
+<meta property="og:locale" content="ko_KR">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="수면 PC통신 — 심야접속">
+<meta name="twitter:description" content="잠 못 드는 밤을 위한 핑크노이즈 방송국. 100% 무료, 광고 없음, 가입 없음. 1990년대 PC통신처럼 접속하는 수면 웹앱.">
+<meta name="twitter:image" content="https://yangjinhyeok22.github.io/og.png">
+<meta name="twitter:image:alt" content="검은 화면에 초승달과 PC통신 접속 기록 — 수면 PC통신 심야접속, 잠 못 드는 밤을 위한 핑크노이즈 방송국">
+<link rel="canonical" href="https://yangjinhyeok22.github.io/">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"수면 PC통신 — 심야접속","alternateName":["심야접속","SleepingBag"],"url":"https://yangjinhyeok22.github.io/","description":"잠 못 드는 밤을 위한 핑크노이즈 방송국. 100% 무료, 광고 없음, 가입 없음. 1990년대 PC통신처럼 접속하는 수면 웹앱.","inLanguage":"ko","applicationCategory":"LifestyleApplication","operatingSystem":"웹 브라우저","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"KRW"},"image":"https://yangjinhyeok22.github.io/og.png"}</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
@@ -49,7 +64,7 @@ input,textarea,select{font:inherit;color:var(--ink-hi);background:var(--panel);b
 /* 머리글 */
 header{padding-top:18px}
 .masthead{border:3px double var(--line);padding:10px 14px;display:flex;flex-wrap:wrap;gap:2px 16px;align-items:baseline;justify-content:space-between}
-.masthead .svc{color:var(--ink-hi);font-weight:700;letter-spacing:.3em;font-size:1.3em}
+.masthead .svc{color:var(--ink-hi);font-weight:700;letter-spacing:.3em;font-size:1.3em;margin:0}
 .masthead .svc .en{display:block;letter-spacing:.2em;font-size:.56em;font-weight:400;color:var(--ink-lo)}
 .masthead .clockbox{text-align:right;color:var(--ink-lo);font-size:.92em;min-width:0}
 .masthead .clockbox b{color:var(--ink);font-weight:400;font-variant-numeric:tabular-nums}
@@ -140,12 +155,15 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
 .bag::after{content:"";position:absolute;top:max(15%,110px);bottom:max(15%,var(--sbh,120px));left:6.25px;width:3px;background:radial-gradient(circle at 42% 40%,var(--bag-zip-hi) 0,var(--bag-zip) .85px,var(--bag-zip) 1.1px,transparent 1.45px) 0 0/3px 5px repeat-y,var(--bag)}
 .bag i{position:absolute;left:4.25px;top:calc(max(15%,110px) - 13px);width:7px;height:17px;border-radius:2.5px;background:linear-gradient(160deg,var(--bag-zip-hi),var(--bag-pull) 45%,var(--bag-zip))}
 .bag i::after{content:"";position:absolute;left:2px;right:2px;top:3px;height:6px;border-radius:1.5px;background:var(--bag)}
+/* 공유하기(2026-11-12): 겹창의 그림 · 주 메뉴 단추 */
+.shimg{display:block;width:auto;height:auto;max-width:100%;max-height:min(46vh,430px);margin:10px 0;border:1px solid var(--line)}
+.sharerow{margin-top:12px}
 </style>
 
 <div class="wrap" id="shell">
 <header>
   <div class="masthead">
-    <div class="svc">심야접속<span class="en">SLEEPINGBAG · BEFORE INTERNET IN KOREA</span></div>
+    <h1 class="svc">심야접속<span class="en">SLEEPINGBAG · BEFORE INTERNET IN KOREA</span></h1>
     <div class="clockbox">현재시각 <b id="clock" class="num">--:--:--</b><br>회선 <span id="linestate">대기</span></div>
   </div>
   <p class="tagline">잠이 안 오는 밤을 위한 무료 핑크 노이즈 방송국 · 100% 무료 · 광고 없음 · 100% 자발적 후원으로만 운영함</p>
@@ -164,6 +182,7 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
     <div class="acts">
       <button class="dial" id="dialbtn">ATDT 0131033</button>
       <button class="quiet" id="quietbtn">조용히 접속</button>
+      <button class="quiet" id="introshare" data-share>공유하기</button>
     </div>
     <pre id="introlog" class="introlog" hidden></pre>
     <p class="note faint" id="skiphint" hidden>화면을 누르면 바로 들어갑니다</p>
@@ -184,6 +203,7 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
   </div>
   <p class="note" style="margin-top:12px" id="mainticker">다섯 채널 전부 무료 · 가입 없음 · 흔적 없음</p>
   <p class="note faint leanline" style="margin-top:4px"></p>
+  <p class="sharerow"><button data-share>공유하기</button></p>
 </section>
 
 <!-- 청취방 -->
@@ -231,6 +251,7 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
     <p class="dim">· <span class="hi">멈춤 기록</span> — 소리가 멈춘 때와 까닭(이 단말기에만 남습니다)<span id="stoplog" style="display:block;margin-top:4px"></span></p>
     <p class="dim">· <span class="hi">가입 없음</span> — 아이디도, 전화번호도, 이메일도 받지 않습니다. 남는 것은 이 단말기 안의 "함께 한 시간"뿐입니다.</p>
     <p class="dim">· <span class="hi">근거</span> — 청취방 맨 아래 [정말 잠이 안 오시나요?]를 누르면 채널마다 제공되는 소리가 수면에 도움이 된다는 내용의 논문들로 이어집니다. 읽다 보면 잠이 옵니다.</p>
+    <p class="dim">· <span class="hi">의견</span> — 불편한 점이나 바라는 점은 <a href="mailto:simyajeobsok@gmail.com">simyajeobsok@gmail.com</a>으로 보내 주십시오.</p>
     <hr>
     <p class="ptitle">설정</p>
     <div class="ctrl">
@@ -238,7 +259,7 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
     </div>
     <p class="note faint leanline" style="margin-top:10px"></p>
     <hr>
-    <p class="note faint">글꼴: 나눔고딕코딩. 수면 PC통신 · 심야접속 v33.14<br>Built with Claude</p>
+    <p class="note faint">글꼴: 나눔고딕코딩. 수면 PC통신 · 심야접속 v33.23<br>Built with Claude</p>
   </div>
 </section>
 
@@ -246,7 +267,8 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
 
 <footer>
   심야접속 — 서버에 음원 없음 · 녹음된 음원이 아니라, 접속한 당신의 단말기가 그 자리에서 만드는 소리입니다 · 과금 없음 · 광고 없음 · 100% 자발적 후원으로만 운영함<br>
-  운영: 시삽 │ 회선 상태가 나쁘면 새로고침 한 번이면 됩니다
+  운영: 시삽 │ 회선 상태가 나쁘면 새로고침 한 번이면 됩니다<br>
+  의견·제보: <a href="mailto:simyajeobsok@gmail.com">simyajeobsok@gmail.com</a>
 </footer>
 </div>
 
@@ -506,7 +528,7 @@ const LOG_QUIET=[[0,"ATDT 0131033  (무음)"],[0.5,"CONNECT 14400"],[1.0,"심야
 /* 소리 장치를 막 켰으면 오디오 시계가 실제로 흐를 때까지(아이폰 0.4초, 그 밖 0.25초, 최대 1.5초) 기다렸다가 부른다 — 켜는 순간 앞소리가 잘리지 않게 */
 function whenAudible(fn,fresh){if(!fresh||!AU.ctx)return fn();const t0=performance.now(),need=IS_IOS?0.4:0.25;let c0=null;const poll=()=>{const c=AU.ctx;if(c.state==="running"){if(c0===null)c0=c.currentTime;if(c.currentTime-c0>=need)return fn()}if(performance.now()-t0>1500)return fn();bootTimers.push(setTimeout(poll,30))};poll()}
 function runConnect(withSound){
-  if(bootTimers.length||booted)return;const fresh=!AU.ctx||AU.ctx.state!=="running";const log=$("#introlog");log.hidden=false;log.textContent="";log.innerHTML="";$("#dialbtn").disabled=true;$("#quietbtn").disabled=true;
+  if(bootTimers.length||booted)return;const fresh=!AU.ctx||AU.ctx.state!=="running";const log=$("#introlog");log.hidden=false;log.textContent="";log.innerHTML="";$("#dialbtn").disabled=true;$("#quietbtn").disabled=true;$("#introshare").disabled=true;
   try{ensureCtx();ensureRoute();if(AU.ctx.state!=="running")AU.ctx.resume().catch(e=>diagNote("깨우기",e));if(IS_IOS){const b=AU.ctx.createBuffer(1,1,AU.ctx.sampleRate),u=AU.ctx.createBufferSource();u.buffer=b;u.connect(AU.ctx.destination);u.start(0)}}catch(e){diagNote("접속 준비",e)}
   const hang=withSound&&AU.curId?(stopAll(),600):0;
   const go=()=>{
@@ -518,7 +540,7 @@ function runConnect(withSound){
   bootTimers.push(setTimeout(finishBoot,end));
   };const start=()=>whenAudible(go,withSound&&fresh);if(hang)bootTimers.push(setTimeout(start,hang));else start();
 }
-function resetIntro(){if(AU.curId)stopAll();bootTimers.forEach(clearTimeout);bootTimers=[];booted=false;canSkip=false;dialedWithSound=false;const lg=$("#introlog");lg.hidden=true;lg.textContent="";$("#skiphint").hidden=true;$("#dialbtn").disabled=false;$("#quietbtn").disabled=false;$("#linestate").textContent="대기"}
+function resetIntro(){if(AU.curId)stopAll();bootTimers.forEach(clearTimeout);bootTimers=[];booted=false;canSkip=false;dialedWithSound=false;const lg=$("#introlog");lg.hidden=true;lg.textContent="";$("#skiphint").hidden=true;$("#dialbtn").disabled=false;$("#quietbtn").disabled=false;$("#introshare").disabled=false;$("#linestate").textContent="대기"}
 function afterBoot(){const h=NAV.wanted;NAV.wanted="";show("main");if(h&&h!=="main"&&VIEWS.includes(h)&&h!=="intro")show(h)}
 function finishBoot(){
   if(booted)return;booted=true;bootTimers.forEach(clearTimeout);bootTimers=[];$("#linestate").textContent="접속됨 14400bps";
@@ -584,6 +606,104 @@ function tick(){
 }
 setInterval(tick,1000);
 document.addEventListener("visibilitychange",()=>{leanFlush();if(!document.hidden){tick();if(timerEndAt&&Date.now()>=timerEndAt){STOPWHY="취침 타이머";stopAll()}}});
+
+/* ============ 공유하기 (2026-11-12 사이트 건강검진 처방: 휴대폰 공유창 · 결과 그림 · 링크 복사 · X · 스레드) ============
+   첫 화면과 주 메뉴의 [공유하기] → 겹창. 오늘 날짜와 '함께 한 시간'이 찍힌 그림 한 장(1080×1350)을 이 단말기에서 그려,
+   휴대폰 공유창으로 그림과 주소를 함께 보내거나 링크 복사 · X · 스레드 · 그림 저장. 카카오톡·인스타그램 안의 브라우저는
+   공유창이 잘 안 열려서 복사를 맨 앞에 두고, 그림은 길게 눌러 저장하게 한다. 보내는 곳은 사람이 고른다 — 앱은 아무것도 모으지 않는다 */
+const SHARE={url:"https://yangjinhyeok22.github.io/",host:"yangjinhyeok22.github.io",title:"수면 PC통신 — 심야접속",text:"잠 못 드는 밤을 위한 핑크노이즈 방송국. 100% 무료, 광고 없음, 가입 없음.",line2:"100% 무료 · 광고 없음 · 가입 없음",deluxe:false,blob:null,file:null,seq:0};
+const INAPP=/KAKAOTALK|Instagram|FBAN|FBAV|FB_IAB|Line\/|NAVER\(inapp|DaumApps|everytimeApp/i.test(navigator.userAgent);
+function shareTime(){const t=leanTotal(),h=Math.floor(t/3600000),m=Math.floor(t/60000)%60;return t<60000?"":(h?h+"시간 ":"")+m+"분"}
+function shareWhen(d){return d.getFullYear()+"."+pad(d.getMonth()+1)+"."+pad(d.getDate())+" ("+"일월화수목금토"[d.getDay()]+") "+pad(d.getHours())+":"+pad(d.getMinutes())}
+function sharePost(){const t=shareTime();return (t?"심야접속과 함께 한 시간 "+t+".\n":"")+SHARE.text}
+function shareName(){const d=new Date();return "simya-"+d.getFullYear()+pad(d.getMonth()+1)+pad(d.getDate())+".png"}
+/* 글자 사이를 벌려 쓰기(앱의 letter-spacing) — 캔버스 letterSpacing을 못 쓰는 브라우저도 같게 한 글자씩 */
+function shSpaced(c,s,x,y,sp){for(const ch of s){c.fillText(ch,x,y);x+=c.measureText(ch).width+sp}return x}
+/* 낱말 단위 줄바꿈(앱의 keep-all과 같게). 한 낱말이 한 줄보다 길면 글자로 자른다 */
+function shWrap(c,s,max){const out=[];let line="";s.split(" ").forEach(w=>{const t=line?line+" "+w:w;if(c.measureText(t).width<=max){line=t;return}
+  if(line)out.push(line);line=w;while(c.measureText(line).width>max&&line.length>1){let k=line.length-1;while(k>1&&c.measureText(line.slice(0,k)).width>max)k--;out.push(line.slice(0,k));line=line.slice(k)}});if(line)out.push(line);return out}
+function shMoon(c,cx,cy,r,full){
+  c.save();c.shadowColor="rgba(150,180,225,.55)";c.shadowBlur=r*0.55;
+  if(full){const g=c.createRadialGradient(cx-r*0.25,cy-r*0.25,r*0.1,cx,cy,r);g.addColorStop(0,"#f4f6f9");g.addColorStop(0.7,"#d5dbe3");g.addColorStop(1,"#a9b2be");
+    c.fillStyle=g;c.beginPath();c.arc(cx,cy,r,0,6.2832);c.fill();c.restore();c.save();c.beginPath();c.arc(cx,cy,r,0,6.2832);c.clip();
+    /* 달 앞면의 바다(비·맑음·고요·풍요·감로·구름·폭풍·위난) — 가장자리가 흐린 얼룩으로 */
+    [[-0.27,-0.36,0.27,0.2,0.42],[0.15,-0.33,0.17,0.15,0.4],[0.3,-0.06,0.2,0.17,0.4],[0.55,0.1,0.13,0.2,0.34],[0.33,0.3,0.11,0.1,0.32],[-0.14,0.36,0.2,0.13,0.3],[-0.52,-0.02,0.24,0.4,0.3],[0.66,-0.3,0.08,0.07,0.42]].forEach(([x,y,a,b,al])=>{
+      c.save();c.translate(cx+x*r,cy+y*r);c.scale(a,b);const m=c.createRadialGradient(0,0,0,0,0,r);m.addColorStop(0,"rgba(88,100,116,"+al+")");m.addColorStop(0.6,"rgba(88,100,116,"+al*0.6+")");m.addColorStop(1,"rgba(88,100,116,0)");c.fillStyle=m;c.beginPath();c.arc(0,0,r,0,6.2832);c.fill();c.restore()});
+  }else{/* 초승달: 아이콘과 같은 두 원(512 기준 바깥 255.29,220.5,133.24 / 안 338.04,196.48,133.06)을 줄여서 */
+    const k=r/133.24,o=document.createElement("canvas");o.width=o.height=Math.ceil(r*2+8);const q=o.getContext("2d"),ox=r+4,oy=r+4;
+    q.fillStyle="#DFE7F2";q.beginPath();q.arc(ox,oy,r,0,6.2832);q.fill();q.globalCompositeOperation="destination-out";q.beginPath();q.arc(ox+(338.04-255.29)*k,oy+(196.48-220.5)*k,133.06*k,0,6.2832);q.fill();
+    c.drawImage(o,cx-ox,cy-oy)}
+  c.restore()}
+function shareCard(){
+  const W=1080,H=1350,cv=document.createElement("canvas");cv.width=W;cv.height=H;const c=cv.getContext("2d");if(!c)return Promise.resolve(null);
+  const MONO='"Nanum Gothic Coding","Courier New",ui-monospace,monospace',f=(w,px)=>w+" "+px+"px "+MONO;
+  const t=shareTime(),ch=AU.curId?CH[AU.curId-1]:null,rows=[["날짜",shareWhen(new Date()),""]];
+  if(ch)rows.push(["채널",ch.full,""]);rows.push(["함께 한 시간",t||"1분 미만","(이 단말기 기준)"]);
+  if(SHARE.deluxe){try{if(typeof db!=="undefined"&&db){const n=["beach","cafe","sky","poems","dirt"].reduce((a,k)=>a+liveDocs(k).length,0);rows.push(["흔적",n+"개",LOCAL_DB?"(이 단말기)":"(모두의 장부)"])}}catch(e){}}
+  const Q1="\"클로드야, 근데 인간의 잠이라는 행위는 어쩌면 가장 죽음에 근접해 있는 행위가 아닐까?\"",Q2="\"그래서 매일 연습하는 겁니다 — 깨어나는 것을.\"";
+  const all="심야접속 SLEEPINGBAG·BEFORE INTERNET IN KOREA Deluxe 모드 ─ 접속 기록 ATDT 0131033 BUILT WITH CLAUDE "+SHARE.text+SHARE.line2+SHARE.host+rows.map(r=>r.join("")).join("")+Q1+Q2+"0123456789";
+  const fonts=(document.fonts&&document.fonts.load)?Promise.all(["400","700"].map(w=>document.fonts.load(w+' 40px "Nanum Gothic Coding"',all))).catch(()=>0):Promise.resolve();
+  return Promise.race([fonts,new Promise(r=>setTimeout(r,2500))]).then(()=>{
+    c.fillStyle="#000";c.fillRect(0,0,W,H);
+    /* 슬리핑백 테두리: 침낭 천 · 바느질 선 · 왼쪽 금속 지퍼(앱 화면 가장자리와 같은 것) */
+    c.fillStyle="#0e0c0a";c.fillRect(0,0,W,24);c.fillRect(0,H-24,W,24);c.fillRect(0,0,24,H);c.fillRect(W-24,0,24,H);
+    c.strokeStyle="#2a241d";c.lineWidth=2;c.setLineDash([8,6]);c.strokeRect(12,12,W-24,H-24);c.setLineDash([]);
+    const z0=Math.round(H*0.15),z1=Math.round(H*0.85);c.fillStyle="#0e0c0a";c.fillRect(6,z0-4,12,z1-z0+8);
+    for(let y=z0;y<=z1;y+=11){const g=c.createRadialGradient(10.5,y-1.5,0.5,12,y,4);g.addColorStop(0,"#c8ccd1");g.addColorStop(1,"#85898f");c.fillStyle=g;c.beginPath();c.arc(12,y,3.4,0,6.2832);c.fill()}
+    {const g=c.createLinearGradient(4,z0-40,22,z0);g.addColorStop(0,"#c8ccd1");g.addColorStop(0.45,"#969aa0");g.addColorStop(1,"#85898f");c.fillStyle=g;c.beginPath();if(c.roundRect)c.roundRect(4,z0-44,16,40,5);else c.rect(4,z0-44,16,40);c.fill();c.fillStyle="#0e0c0a";c.fillRect(8.5,z0-36,7,13)}
+    const X0=96,X1=W-96;let y=96;
+    /* 머리글 상자(앱의 border:3px double) */
+    c.strokeStyle="#3a3a3a";c.lineWidth=3;c.strokeRect(X0+1.5,y+1.5,X1-X0-3,247);c.strokeRect(X0+7.5,y+7.5,X1-X0-15,235);
+    c.fillStyle="#c5c5c5";c.font=f(700,74);shSpaced(c,"심야접속",X0+46,y+112,22);
+    c.fillStyle="#6c6c6c";c.font=f(400,21);shSpaced(c,"SLEEPINGBAG · BEFORE INTERNET IN KOREA",X0+48,y+158,4.2);
+    if(SHARE.deluxe){c.fillStyle="#7b8fa6";c.font=f(700,28);shSpaced(c,"Deluxe 모드",X0+48,y+208,3)}
+    shMoon(c,X1-128,y+108,SHARE.deluxe?70:76,SHARE.deluxe);
+    y+=330;c.textAlign="left";
+    c.fillStyle="#9c9c9c";c.font=f(400,34);shWrap(c,SHARE.text.split(". ")[0],X1-X0).forEach(s=>{c.fillText(s,X0,y);y+=50});
+    c.fillStyle="#6c6c6c";c.font=f(400,27);c.fillText(SHARE.line2,X0,y);y+=96;
+    c.fillStyle="#6c6c6c";c.font=f(400,26);shSpaced(c,"─ 접속 기록",X0,y,8);y+=72;
+    const rh=rows.length>3?62:70;
+    rows.forEach(([k,v,n])=>{c.fillStyle="#6c6c6c";c.font=f(400,28);c.fillText(k,X0+6,y);c.fillStyle="#c5c5c5";c.font=f(400,36);const vx=X0+250;c.fillText(v,vx,y);
+      if(n){const nx=vx+c.measureText(v).width+16;c.fillStyle="#6c6c6c";c.font=f(400,24);if(nx+c.measureText(n).width<=X1)c.fillText(n,nx,y);else{y+=40;c.fillText(n,vx,y)}}y+=rh});
+    y+=6;c.fillStyle="#222";c.fillRect(X0,y,X1-X0,2);y+=rh+4;
+    c.fillStyle="#c5c5c5";c.font=f(400,31);shWrap(c,Q1,X1-X0).forEach(s=>{c.fillText(s,X0,y);y+=50});y+=18;
+    c.fillStyle="#7b8fa6";c.font=f(700,34);shWrap(c,Q2,X1-X0).forEach(s=>{c.fillText(s,X0,y);y+=52});
+    /* 아래: ATDT 단추 모양 + 주소 */
+    const by=H-206;c.font=f(400,36);const tw=(()=>{let w=0;for(const ch of "ATDT 0131033")w+=c.measureText(ch).width+5;return w})();
+    c.strokeStyle="#45545f";c.lineWidth=3;c.strokeRect(X0+1.5,by+1.5,tw+92,77);c.fillStyle="#c5c5c5";const ex=shSpaced(c,"ATDT 0131033",X0+38,by+53,5);c.fillStyle="#7b8fa6";c.fillRect(ex+4,by+24,18,36);
+    c.fillStyle="#474747";c.font=f(400,20);shSpaced(c,"BUILT WITH CLAUDE",X0,H-70,5);
+    c.fillStyle="#7b8fa6";c.font=f(400,30);c.textAlign="right";c.fillText(SHARE.host,X1,H-70);c.textAlign="left";
+    return new Promise(r=>{try{cv.toBlob(b=>{if(!b){r(null);return}let u="";try{u=cv.toDataURL("image/png")}catch(e){}r({blob:b,url:u})},"image/png")}catch(e){r(null)}});
+  })}
+/* 그림은 겹창을 열 때 미리 그려 둔다 — 공유창은 누르는 순간 바로 불러야 해서(기다렸다 부르면 아이폰이 막는다) */
+function shareReady(){const my=++SHARE.seq;SHARE.blob=null;SHARE.file=null;
+  return shareCard().then(r=>{if(my!==SHARE.seq||!r)return;SHARE.blob=r.blob;try{SHARE.file=new File([r.blob],shareName(),{type:"image/png"})}catch(e){SHARE.file=null}
+    const img=$("#shimg"),w=$("#shwait");if(img&&r.url){img.src=r.url;img.hidden=false}if(w)w.hidden=true}).catch(e=>{diagNote("공유 그림",e);const w=$("#shwait");if(w)w.textContent="그림을 만들지 못했습니다. 링크는 그대로 보낼 수 있습니다."})}
+function shareCopy(){const u=SHARE.url,ok=()=>toast("링크를 복사했습니다.");
+  const fb=()=>{const ta=document.createElement("textarea");ta.value=u;ta.setAttribute("readonly","");ta.style.cssText="position:fixed;left:-9999px;top:0";document.body.append(ta);ta.select();let r=false;try{r=document.execCommand("copy")}catch(e){}ta.remove();if(r)ok();else toast("복사가 막혀 있습니다. 아래 주소를 길게 눌러 복사하십시오.",5000)};
+  if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(u).then(ok,fb);else fb()}
+function shareOpen(u){const a=document.createElement("a");a.href=u;a.target="_blank";a.rel="noopener";document.body.append(a);a.click();a.remove()}
+function shareNative(){const d={title:SHARE.title,text:sharePost(),url:SHARE.url},f=SHARE.file;let p;
+  try{p=(f&&navigator.canShare&&navigator.canShare({files:[f]}))?navigator.share(Object.assign({files:[f]},d)):navigator.share(d)}catch(e){p=Promise.reject(e)}
+  p.catch(e=>{if(e&&e.name==="AbortError")return;diagNote("공유창",e);shareCopy()})}
+async function shareSave(){const b=SHARE.blob;if(!b){toast("그림을 만드는 중입니다. 잠시 뒤 다시 눌러 주십시오.");return}const name=shareName();
+  try{if(window.claude&&typeof window.claude.use==="function"){const dl=await window.claude.use("downloads");if(dl){await dl.save({filename:name,data:b});toast("저장했습니다.");return}}}catch(e){if(e&&e.code==="declined")return}
+  const a=document.createElement("a"),u=URL.createObjectURL(b);a.href=u;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),5000);
+  if(INAPP||IS_IOS)toast("저장이 안 되면 그림을 길게 눌러 저장하십시오.",4500)}
+function openShare(){
+  const can=typeof navigator.share==="function",L={"sh-native":"공유창 열기","sh-copy":"링크 복사","sh-x":"X에 올리기","sh-th":"스레드에 올리기","sh-save":"그림 저장"};
+  const order=(INAPP?["sh-copy","sh-native","sh-x","sh-th","sh-save"]:["sh-native","sh-copy","sh-x","sh-th","sh-save"]).filter(k=>k!=="sh-native"||can);
+  openSheet('<h3>공유하기</h3><p class="note">오늘 밤의 접속 기록을 그림 한 장으로 만들었습니다. 링크를 받은 사람은 이 방송국으로 들어옵니다.</p>'+
+    '<p class="note faint" id="shwait">그림을 만드는 중…</p><img id="shimg" class="shimg" alt="심야접속 접속 기록 그림" hidden>'+
+    '<div class="acts">'+order.map(k=>'<button id="'+k+'">'+L[k]+'</button>').join("")+'<button id="sheetclose">닫기</button></div>'+
+    '<p class="note faint">'+(INAPP?"그림은 길게 눌러 저장하십시오. ":"")+(can?"카카오톡·문자·인스타그램은 [공유창 열기]에서 고를 수 있습니다.":"카카오톡에는 링크를 복사해 붙여 넣으십시오.")+'<br><span class="num">'+esc(SHARE.url)+'</span></p>');
+  $("#sheetclose").addEventListener("click",closeSheet);
+  const on=(id,fn)=>{const b=$("#"+id);if(b)b.addEventListener("click",fn)};
+  on("sh-native",shareNative);on("sh-copy",shareCopy);on("sh-save",shareSave);
+  on("sh-x",()=>shareOpen("https://x.com/intent/tweet?text="+encodeURIComponent(sharePost())+"&url="+encodeURIComponent(SHARE.url)));
+  on("sh-th",()=>shareOpen("https://www.threads.com/intent/post?text="+encodeURIComponent(sharePost())+"&url="+encodeURIComponent(SHARE.url)));
+  shareReady()}
+document.addEventListener("click",e=>{const s=e.target.closest("[data-share]");if(s&&!s.disabled)openShare()});
 
 /* ============ 시작 ============ */
 /* 앱 아이콘으로 열었을 때: 안드로이드 시작 화면과 똑같은 로고 — 켜진 커서가 다섯 번 보이고(일, 이, 삼, 사, 오) 다시 꺼지기 직전에 스르르 첫 화면으로(누르면 바로 넘어감) */

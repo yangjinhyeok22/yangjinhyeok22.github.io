@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://yangjinhyeok22.github.io/sitemap.xml
