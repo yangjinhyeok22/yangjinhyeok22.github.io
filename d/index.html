@@ -131,7 +131,7 @@ input[type=range]{width:150px;accent-color:var(--accent);background:transparent;
 #statusbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--bg);border-top:1px solid var(--line);
   padding:7px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 body.inworld #statusbar{display:none}
-#statusbar .inner{max-width:744px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"np vu play" "time time time";gap:2px 12px;align-items:center;color:var(--ink-lo);font-size:.9em}
+#statusbar .inner{max-width:744px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"np vu play" "time time vol";gap:2px 12px;align-items:center;color:var(--ink-lo);font-size:.9em}
 #statusbar .np{grid-area:np;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#statusbar #vu{grid-area:vu}#statusbar #sbplay{grid-area:play;min-width:4.2em}#statusbar .time{grid-area:time;display:flex;justify-content:space-between;white-space:nowrap}
 #statusbar .np b{color:var(--accent);font-weight:400}
 #statusbar button{padding:1px 9px;font-size:.95em}
@@ -168,7 +168,7 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
   text-shadow:-1px -1px 0 #060504,1px 1px 0 #2e2922;letter-spacing:1px;padding:4px 6px;max-width:70vw;overflow:hidden;text-overflow:ellipsis}
 .sandtext small{display:block;font-family:var(--mono);font-size:10px;color:#3a342c;text-shadow:none;letter-spacing:0}
 .sandtext:hover{color:#7a6f5f}
-.postit{position:absolute;width:92px;min-height:66px;padding:8px 7px 5px;font-family:var(--pen);font-size:19px;line-height:1.15;color:#2a2416;cursor:pointer;
+.postit{position:absolute;width:116px;min-height:66px;padding:8px 7px 5px;font-family:var(--pen);font-size:19px;line-height:1.15;color:#2a2416;cursor:pointer;
   box-shadow:2px 4px 10px rgba(0,0,0,.6),inset 0 12px 0 rgba(0,0,0,.06);word-break:break-word;overflow:hidden;transform-origin:50% 0}
 .postit small{display:block;font-family:var(--mono);font-size:7.5px;color:rgba(0,0,0,.45);margin-top:4px}
 .postit.c0{background:#e9dc7a}.postit.c1{background:#e8b4c4}.postit.c2{background:#a9cde0}.postit.c3{background:#b8dcb4}
@@ -183,7 +183,7 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
 .sw button{width:22px;height:22px;padding:0;border:1px solid #000;background:#888}
 .sw .c0{background:#e9dc7a}.sw .c1{background:#e8b4c4}.sw .c2{background:#a9cde0}.sw .c3{background:#b8dcb4}
 .sw button.on{outline:2px solid var(--accent);outline-offset:1px}
-.postit.draft{position:relative;width:100px;min-height:72px;padding:9px 8px 7px;cursor:text;transform:rotate(-2deg);margin:2px 0 0 8px}
+.postit.draft{position:relative;width:118px;min-height:72px;padding:9px 8px 7px;cursor:text;transform:rotate(-2deg);margin:2px 0 0 8px}
 .postit.draft canvas{display:block;pointer-events:none}
 .postit.draft textarea{position:absolute;left:0;top:0;width:100%;height:100%;opacity:0;pointer-events:none}
 .postit canvas.pink{display:block;max-width:100%}
@@ -301,6 +301,27 @@ button.link{border:0;padding:0;color:var(--accent);background:none;text-decorati
 /* 공유하기(2026-11-12): 겹창의 그림 · 주 메뉴 단추 */
 .shimg{display:block;width:auto;height:auto;max-width:100%;max-height:min(46vh,430px);margin:10px 0;border:1px solid var(--line)}
 .sharerow{margin-top:12px}
+/* 음량 막대(2026-11-13): 32칸 LED, 끝 칸은 ATDT 커서처럼 하얗게. 바뀌는 건 사람이 만질 때뿐(번쩍임 없음) */
+#volhud{position:absolute;left:50%;bottom:calc(100% + 10px);z-index:50;width:min(520px,calc(100vw - 32px));font-size:clamp(13px,1.6vw,14.5px);line-height:1.8;text-align:left;box-sizing:border-box;transform:translate(-50%,12px);opacity:0;
+  transition:opacity .18s ease,transform .18s ease,border-color .15s;background:#040404;border:1px solid var(--accent-dim);
+  box-shadow:0 0 0 3px #000,0 0 0 4px var(--line),0 12px 40px rgba(0,0,0,.85);padding:10px 14px 8px;color:var(--ink-lo);font-family:var(--mono);
+  touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+#volhud.on{opacity:1;transform:translate(-50%,0)}
+#volhud.grab{border-color:var(--accent)}
+#volhud .vh-top{display:flex;justify-content:space-between;align-items:baseline;letter-spacing:.3em;font-size:.9em}
+#volhud .vh-num{font-size:2em;letter-spacing:.08em;color:var(--accent);line-height:1.1;transition:color .15s,transform .12s;transform-origin:right center}
+#volhud.grab .vh-num{color:var(--ink-hi);transform:scale(1.06)}
+#volhud.mute .vh-num{color:var(--ink-faint)}
+#vhtrack{display:flex;gap:2px;height:34px;margin:8px 0 6px;padding:5px;border:1px solid var(--line);cursor:pointer;outline:none;touch-action:none}
+#vhtrack:focus-visible{border-color:var(--accent-dim)}
+#vhtrack i{flex:1;min-width:0;background:#101317;transition:background-color .07s,box-shadow .07s}
+#vhtrack i.on{background:var(--c)}
+#vhtrack i.tip{background:#c5c5c5;box-shadow:0 0 9px rgba(197,197,197,.55)}
+#volhud.grab #vhtrack i.tip{background:#dfe5ee;box-shadow:0 0 14px rgba(220,228,240,.75)}
+#volhud .vh-bot{display:flex;justify-content:space-between;align-items:center;font-size:.85em}
+#volhud .vh-bot button{min-width:3.2em;font-size:1.25em;padding:0 12px;line-height:1.5;touch-action:none}
+#statusbar #sbvol{grid-area:vol;justify-self:end}
+@media (prefers-reduced-motion:reduce){#volhud,#vhtrack i,#volhud .vh-num{transition:none}}
 </style>
 
 <div class="wrap" id="shell">
@@ -487,6 +508,7 @@ button.link{border:0;padding:0;color:var(--accent);background:none;text-decorati
     <span class="np" id="npline">■ 정지됨 — 세계에 들어가면 소리가 납니다</span>
     <span id="vu" aria-hidden="true"></span>
     <button id="sbplay">재생</button>
+    <button id="sbvol" data-vol aria-haspopup="true" aria-expanded="false">음량 <span class="vn num">35</span></button>
     <span class="time num"><span id="timerleft"></span><span>이용시간 <span id="elapsed">00:00:00</span></span></span>
   </div>
 </div>
@@ -506,7 +528,7 @@ button.link{border:0;padding:0;color:var(--accent);background:none;text-decorati
   </div>
   <input id="btext" class="ghostin" maxlength="80" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-label="모래에 쓸 한 줄">
   <div class="wtop"><button data-go="main">← 나가기</button><span class="wname">해변 · <b>CH.001 바다 소리</b></span><span class="num wclock"></span></div>
-  <div class="wbot"><button class="pri" data-write="beach">모래에 긋기</button><span class="whint" id="beachhint">모래를 누르면 그 자리에 씁니다 · 파도는 예고 없이 모든 글을 지웁니다</span><button data-ctl>조절</button></div>
+  <div class="wbot"><button class="pri" data-write="beach">모래에 긋기</button><span class="whint" id="beachhint">모래를 누르면 그 자리에 씁니다 · 파도는 예고 없이 모든 글을 지웁니다</span><button data-vol aria-haspopup="true" aria-expanded="false">음량 <span class="vn num">35</span></button><button data-ctl>조절</button></div>
 </div>
 
 <div class="world" id="w-cafe">
@@ -521,7 +543,7 @@ button.link{border:0;padding:0;color:var(--accent);background:none;text-decorati
     <div class="edacts"><button class="pri" id="edsave">붙이기</button><button id="edcancel">취소</button><span class="err" id="ederr"></span></div>
   </div>
   <div class="wtop"><button data-go="main">← 나가기</button><span class="wname">카페 · <b>CH.002 빗소리</b></span><span class="num wclock"></span></div>
-  <div class="wbot"><button class="pri" data-write="cafe">포스트잇 붙이기</button><span class="whint" id="cafehint">유리 빈 자리를 누르면 그 자리에 붙습니다</span><button data-ctl>조절</button></div>
+  <div class="wbot"><button class="pri" data-write="cafe">포스트잇 붙이기</button><span class="whint" id="cafehint">유리 빈 자리를 누르면 그 자리에 붙습니다 · 두 손가락으로 확대, 끌어서 보기</span><button data-vol aria-haspopup="true" aria-expanded="false">음량 <span class="vn num">35</span></button><button data-ctl>조절</button></div>
 </div>
 
 <div class="world" id="w-sky">
@@ -530,7 +552,7 @@ button.link{border:0;padding:0;color:var(--accent);background:none;text-decorati
   <div class="wvig"></div>
   <div class="skydim" id="skydim"><div>담배 한 대 길이가 지났습니다.<br><span class="dim">하늘은 내일 밤에도 있습니다.</span><br><br><button id="skymore">조금만 더</button> <button data-go="main">자러 가기</button></div></div>
   <div class="wtop"><button data-go="main">← 나가기</button><span class="wname">하늘 · <b>CH.003 원음</b> · <span id="skyloc"></span></span><span class="num wclock"></span></div>
-  <div class="wbot"><button id="compassbtn">나침반</button><button id="moonbtn">달</button><span class="whint" id="skyhint">하늘을 끌어 둘러보고, 두 손가락으로 당겨 키우십시오 · 별이나 별자리 이름을 누르면 설명</span><button data-ctl>조절</button></div>
+  <div class="wbot"><button id="compassbtn">나침반</button><button id="moonbtn">달</button><span class="whint" id="skyhint">하늘을 끌어 둘러보고, 두 손가락으로 당겨 키우십시오 · 별이나 별자리 이름을 누르면 설명</span><button data-vol aria-haspopup="true" aria-expanded="false">음량 <span class="vn num">35</span></button><button data-ctl>조절</button></div>
 </div>
 
 <div class="world" id="w-shelf">
@@ -556,7 +578,7 @@ button.link{border:0;padding:0;color:var(--accent);background:none;text-decorati
 </svg></div>
   <div class="holdmsg" id="holdmsg" hidden></div>
   <div class="chipnote" id="chipnote" hidden><p>좋아했던 중학교 음악 선생님이 말했다.</p><p>"여러분, 여러분이 음악을 왜 음악으로 느끼는지 아세요? 반복이 있기 때문이에요."</p><p>그러나 이 음악은 반복이 없다. 오직 우연만이 있을 뿐이다. 그것도 영원히.</p></div>
-  <div class="wbot shelfbar"><span class="whint" id="shelfhint">◀ ▶ 로 액자 앞까지 걸어갑니다 · 액자를 누르면 읽습니다</span><button id="prevframe">◀</button><button id="nextframe">▶</button><button id="flowerbtn">꽃다발 들기</button><button id="snapbtn" hidden>캡처</button><button class="pri" data-write="shelf">쓰기</button><button id="listbtn">목록</button><button id="shelfsnd">소리 끄기</button><button data-ctl>조절</button></div>
+  <div class="wbot shelfbar"><span class="whint" id="shelfhint">◀ ▶ 로 액자 앞까지 걸어갑니다 · 액자를 누르면 읽습니다</span><button id="prevframe">◀</button><button id="nextframe">▶</button><button id="flowerbtn">꽃다발 들기</button><button id="snapbtn" hidden>캡처</button><button class="pri" data-write="shelf">쓰기</button><button id="listbtn">목록</button><button id="shelfsnd">소리 끄기</button><button data-vol aria-haspopup="true" aria-expanded="false">음량 <span class="vn num">35</span></button><button data-ctl>조절</button></div>
 </div>
 
 <div class="world" id="w-savanna">
@@ -571,7 +593,14 @@ button.link{border:0;padding:0;color:var(--accent);background:none;text-decorati
   </div>
   <input id="stext" class="ghostin" maxlength="80" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" enterkeyhint="done" aria-label="흙에 쓸 한 줄">
   <div class="wtop"><button data-go="main">← 나가기</button><span class="wname">초원 · <b>CH.005 모닥불</b></span><span class="num wclock"></span></div>
-  <div class="wbot"><button class="pri" data-write="savanna">흙에 긋기</button><button id="woodbtn">장작 넣기</button><span class="whint" id="savhint">…</span><button data-ctl>조절</button></div>
+  <div class="wbot"><button class="pri" data-write="savanna">흙에 긋기</button><button id="woodbtn">장작 넣기</button><span class="whint" id="savhint">…</span><button data-vol aria-haspopup="true" aria-expanded="false">음량 <span class="vn num">35</span></button><button data-ctl>조절</button></div>
+</div>
+
+<!-- 음량 막대(2026-11-13): 재생줄·세계 아래줄의 [음량] -->
+<div id="volhud" hidden role="group" aria-label="음량">
+  <div class="vh-top"><span>음량</span><span class="vh-num num" id="vhnum">035</span></div>
+  <div id="vhtrack" role="slider" tabindex="0" aria-label="음량" aria-valuemin="0" aria-valuemax="100" aria-valuenow="35"></div>
+  <div class="vh-bot"><button id="vhdn" aria-label="음량 작게">−</button><span class="faint">끌어서 맞춥니다</span><button id="vhup" aria-label="음량 크게">+</button></div>
 </div>
 
 <!-- 겹창 -->
@@ -805,8 +834,8 @@ function armWatcher(){if(NAV.exiting||NAV.cw||typeof CloseWatcher!=="function")r
 function armBack(){if(NAV.exiting)return;armWatcher();if(NAV.depth<8){try{history.pushState({sb:1},"");NAV.depth++}catch(e){}}}
 ["pointerup","keydown"].forEach(t=>addEventListener(t,armBack,true));
 armWatcher();
-function editorOpen(){return $("#sheet").classList.contains("on")}
-function closeOverlays(){closeSheet()}
+function editorOpen(){return $("#sheet").classList.contains("on")||!!document.querySelector("#volhud.on")}
+function closeOverlays(){closeSheet();vhClose()}
 function askExit(){openSheet('<h3>나가시겠습니까?</h3><p class="note">소리는 멈춥니다. 내일 밤에도 회선은 열려 있습니다.</p><div class="acts"><button id="exityes">예, 나갑니다</button><button class="pri" id="sheetclose">아니오, 더 있을게요</button></div>');$("#sheetclose").addEventListener("click",closeSheet);
   $("#exityes").addEventListener("click",()=>{closeSheet();stopAll();NAV.exiting=true;if(NAV.cw){try{NAV.cw.destroy()}catch(e){}NAV.cw=null}const d=NAV.depth;try{history.go(-d-1)}catch(e){}
     /* 앞 페이지가 없어 못 나간 경우: 완충 항목만 걷어 첫 항목에 세워 두면 다음 뒤로가기가 곧장 나간다 */
@@ -1003,7 +1032,7 @@ async function likeDoc(col,d,btn){
 /* 내가 쓴 글(이 단말 기준): 고치기·치우기 권한 */
 const MINE=new Set(ls.get("mine",[]));function markMine(col,id){if(!id)return;MINE.add(col+"/"+id);ls.set("mine",[...MINE].slice(-500))}function isMine(col,id){return MINE.has(col+"/"+id)}
 /* 서버 응답을 기다리지 않고 내 글을 바로 화면에 (구독이 늦어도 보이게) */
-function localInsert(col,id,doc){const S=subs[col];if(!S)return;S.docs.unshift({id:id||("local"+Date.now()),...doc});S.ready=true;onData(col)}
+function localInsert(col,id,doc){const S=subs[col];if(!S)return;if(id&&S.docs.some(x=>x.id===id))return;S.docs.unshift({id:id||("local"+Date.now()),...doc});S.ready=true;onData(col)}
 async function reportDoc(col,d,btn){
   if(!db)return;if(btn){btn.disabled=true;btn.textContent="신고됨 — 시삽이 봅니다"}
   try{await db.collection("reports").add({col,id:d.id,t:Date.now(),text:(d.text||d.title||"").slice(0,60)})}catch(e){}
@@ -1158,7 +1187,7 @@ function strokeGroove(c,path,frac,pal){
   const lim=total*(frac==null?1:frac);
   const build=(dx,dy)=>{c.beginPath();c.moveTo(path[0][0]+dx,path[0][1]+dy);let acc=0;for(let i=1;i<path.length;i++){const l=segs[i-1];if(acc+l>lim){const tt=l?(lim-acc)/l:0;c.lineTo(path[i-1][0]+(path[i][0]-path[i-1][0])*tt+dx,path[i-1][1]+(path[i][1]-path[i-1][1])*tt+dy);break}c.lineTo(path[i][0]+dx,path[i][1]+dy);acc+=l}};
   c.save();c.lineCap="round";c.lineJoin="round";
-  if(pal.pen){/* 만년필(종이): 불투명한 한 줄. 프레임마다 덧그려도 진해지지 않는다 */c.strokeStyle=pal.groove;c.lineWidth=1.3;build(0,0);c.stroke();c.restore();return}
+  if(pal.pen){/* 종이 잉크(2026-11-13): 해변·초원 글씨와 같은 짜임 — 아래·오른쪽으로 비낀 그늘 한 줄(2.0) + 잉크 한 줄(1.35). 종이엔 빛 줄이 없다. 밑종이에 한 번만 그으니(paperWriter) 덧그려 진해지지 않는다 */c.strokeStyle=pal.shadow;c.lineWidth=2.0;build(0.65,0.85);c.stroke();c.strokeStyle=pal.groove;c.lineWidth=1.35;build(0,0);c.stroke();c.restore();return}
   if(pal.engraved){/* 음각(초원): 홈의 위쪽 벽은 그늘, 아래쪽 벽은 불빛을 받아 밝다 */
     c.strokeStyle=pal.hi;c.lineWidth=0.75;build(0.5,1.0);c.stroke();
     c.strokeStyle=pal.shadow;c.lineWidth=2.0;build(-0.45,-0.95);c.stroke();
@@ -1216,16 +1245,32 @@ function makeBoard(cfg){return{
     $(E.hint).textContent="표시한 자리에서 오른쪽으로 써 나갑니다. 글자는 치는 대로 "+this.cfg.tool+"가 긋습니다.";
   },
   cancelEdit(){const E=this.cfg.el;const g=$(E.text);if(g&&document.activeElement===g)g.blur();this.drop();const ed=$(E.edit);if(ed)ed.hidden=true;this.caretPos=null;const m=$(E.mark);if(m)m.hidden=true;this.draft=null;this.draftText="";this.placing=false;this.anim=[];this.animQueue=[];if(this.dink)this.dink.c.clearRect(0,0,this.w,this.h)},
+  /* 2026-11-13: 입력이 '줄어들기만' 한 순간은 0.08초 기다려 본다 — 아이폰 한글 자판은 'ㄱ'→'가'를 '지우고 다시 넣기'로 보내기도 해서, 그 사이(빈 글)를 그리면 글자가 깜빡이며 처음부터 다시 그어진다 */
+  onInput(){const v=$(this.cfg.el.text).value;clearTimeout(this.typeT);this.typeT=0;if(v.length<this.draftText.length&&this.draftText.startsWith(v)){this.typeT=setTimeout(()=>{this.typeT=0;this.onType()},80);return}this.onType()},
   onType(){if(!this.draft)return;const E=this.cfg.el;const v=$(E.text).value;$(E.count).textContent=v.length;this.caretPos=this.caretAt(v);DRAFT.set(this.cfg.world,{text:v});const old=Array.from(this.draftText),nw=Array.from(v);let i=0;while(i<old.length&&i<nw.length&&old[i]===nw[i])i++;
     const prevText=this.draftText;this.draftText=v;const rnd=seeded("draft");const L=this.layout(v,this.draft.x,this.draft.y);
-    const c=this.dink.c;c.clearRect(0,0,this.w,this.h);this.anim=[];this.animQueue=[];this.hold=null;
+    /* 2026-11-13: 글자가 바뀌어도(ㄱ→가→강) 남는 획은 하던 일을 그대로 — 긋던 획은 끝까지, 기다리던 획은 차례 그대로, 다 그은 획만 정적으로.
+       획마다 '글자 번호:획 번호' 이름표(k)를 붙여 알아본다 */
+    const was=new Map();this.anim.forEach(a=>{if(a.k)was.set(a.k,{st:"anim",a})});this.animQueue.forEach(q=>{if(q.k)was.set(q.k,{st:"queue",q})});if(this.hold)this.hold.items.forEach(q=>{if(q.k)was.set(q.k,{st:"hold",q})});
+    const c=this.dink.c;c.clearRect(0,0,this.w,this.h);const anim=[],queue=[],held=[];
     /* ② 받침이 다음 글자의 초성으로 넘어간 경우('획'→'회기'): 그 획들은 지우지 않고 옛 자리에서 새 자리로 미끄러진다 */
     let slide=null;const oc=old[i]&&old[i].codePointAt(0),nc=nw[i]&&nw[i].codePointAt(0),xc=nw[i+1]&&nw[i+1].codePointAt(0);
     if(oc>=0xAC00&&oc<=0xD7A3&&nc>=0xAC00&&xc>=0xAC00&&xc<=0xD7A3){const fi=(oc-0xAC00)%28;const JONG2CHO={1:0,2:1,4:2,7:3,8:5,16:6,17:7,19:9,20:10,21:11,22:12,23:14,24:15,25:16,26:17,27:18};if(fi&&oc-fi===nc&&Math.floor((xc-0xAC00)/588)===JONG2CHO[fi]){const oldL=this.layout(prevText,this.draft.x,this.draft.y);const og=oldL.glyphs[i];const op=og&&this.glyphPaths(og,seeded("draft"));if(op){const base=(glyphStrokes(nw[i])||[]).length;slide={from:op.slice(base),n:op.length-base}}}}
-    L.glyphs.forEach((g,idx)=>{if(idx<i){this.drawGlyphStatic(c,g,rnd);return}const paths=this.glyphPaths(g,rnd);if(paths){let keep=0;if(idx===i&&old[i]){const a=glyphStrokes(old[i])||[],b=glyphStrokes(g.ch)||[];keep=a.length&&b.length>a.length?a.length:Math.max(0,b.length-1)}
-        /* ① 맨 마지막 글자의 받침은 다음 글자로 넘어갈지 모르니 잠시 들고 있다가 긋는다 */
-        const code=g.ch.codePointAt(0);let jong=0;if(idx===L.glyphs.length-1&&code>=0xAC00&&code<=0xD7A3&&(code-0xAC00)%28){jong=paths.length-(glyphStrokes(String.fromCodePoint(code-(code-0xAC00)%28))||[]).length}
-        paths.forEach((p,pi)=>{if(pi<keep)strokeGroove(c,p,1,this.cfg.pal);else if(slide&&idx===i+1&&pi<slide.n)this.animQueue.push({p,g,from:slide.from[pi]});else if(jong&&pi>=paths.length-jong){if(!this.hold)this.hold={t:performance.now()+350,items:[]};this.hold.items.push({p,g})}else this.animQueue.push({p,g})})}else this.animQueue.push({g,text:true})});
+    L.glyphs.forEach((g,idx)=>{const paths=this.glyphPaths(g,rnd);
+      if(!paths){const w=idx<i&&was.get(idx+":t");if(w)queue.push(w.q);else if(idx<i)this.drawGlyphStatic(c,g,rnd);else queue.push({g,text:true,k:idx+":t"});return}
+      let keep=0;if(idx<i)keep=paths.length;else if(idx===i&&old[i])keep=strokeKeep(old[i],g.ch);
+      /* ① 맨 마지막 글자의 받침은 다음 글자로 넘어갈지 모르니 잠시 들고 있다가 긋는다 */
+      const code=g.ch.codePointAt(0);let jong=0;if(idx===L.glyphs.length-1&&code>=0xAC00&&code<=0xD7A3&&(code-0xAC00)%28){jong=paths.length-(glyphStrokes(String.fromCodePoint(code-(code-0xAC00)%28))||[]).length}
+      paths.forEach((p,pi)=>{const k=idx+":"+pi,isJ=jong&&pi>=paths.length-jong;
+        if(pi<keep){const w=was.get(k);
+          if(!w){strokeGroove(c,p,1,this.cfg.pal);return}
+          if(w.st==="anim"){w.a.p=p;anim.push(w.a);return}
+          if(isJ){held.push({p,g,k});return}
+          queue.push(Object.assign({},w.q,{p,g,k}));return}
+        if(slide&&idx===i+1&&pi<slide.n){queue.push({p,g,from:slide.from[pi],k});return}
+        if(isJ){held.push({p,g,k});return}
+        queue.push({p,g,k})})});
+    this.anim=anim;this.animQueue=queue;this.hold=held.length?{t:performance.now()+350,items:held}:null;
   },
   async save(asNick){const E=this.cfg.el;const text=$(E.text).value.trim();const bad=screen(text,80);if(bad){$(E.err).textContent=bad;return}
     const nick=(asNick||memberName()||($(E.nick)&&$(E.nick).value.trim())||"익명의 불면자").slice(0,12);if(!asNick&&!memberName()&&$(E.nick))ls.set("nick",$(E.nick).value.trim());
@@ -1234,7 +1279,7 @@ function makeBoard(cfg){return{
     catch(e){$(E.err).textContent=writeFailText(e)}$(E.save).disabled=false},
   stepAnim(ctx,now){
     if(this.hold&&now>this.hold.t){this.animQueue.push(...this.hold.items);this.hold=null}
-    if(!this.anim.length&&this.animQueue.length&&!(this.gapUntil>now)){const q=this.animQueue.shift();if(q.from){this.anim.push({p:q.p,from:q.from,t0:now,dur:220,fast:true});return}if(q.text){this.drawGlyphStatic(this.dink.c,q.g,seeded("draft"));sandSwish(140,this.cfg.soft);return}let len=0;for(let i=1;i<q.p.length;i++)len+=Math.hypot(q.p[i][0]-q.p[i-1][0],q.p[i][1]-q.p[i-1][1]);/* 한 획 150ms쯤 — 타자 속도를 따라간다. 밀린 획이 많으면(초고 복원 등) 서둘러 긋는다 */const fast=this.animQueue.length>10;const dur=fast?Math.max(70,len*10):Math.max(150,len*26);this.anim.push({p:q.p,t0:now,dur,fast});sandSwish(dur,this.cfg.soft)}
+    if(!this.anim.length&&this.animQueue.length&&!(this.gapUntil>now)){const q=this.animQueue.shift();if(q.from){this.anim.push({p:q.p,from:q.from,t0:now,dur:220,fast:true,k:q.k});return}if(q.text){this.drawGlyphStatic(this.dink.c,q.g,seeded("draft"));sandSwish(140,this.cfg.soft);return}let len=0;for(let i=1;i<q.p.length;i++)len+=Math.hypot(q.p[i][0]-q.p[i-1][0],q.p[i][1]-q.p[i-1][1]);/* 한 획 150ms쯤 — 타자 속도를 따라간다. 밀린 획이 많으면(초고 복원 등) 서둘러 긋는다 */const fast=this.animQueue.length>10;const dur=fast?Math.max(70,len*10):Math.max(150,len*26);this.anim.push({p:q.p,t0:now,dur,fast,k:q.k});sandSwish(dur,this.cfg.soft)}
     this.anim=this.anim.filter(a=>{const k=Math.min(1,(now-a.t0)/a.dur);if(a.from){const e=k<0.5?2*k*k:1-Math.pow(-2*k+2,2)/2;const q=a.p.map((pt,j)=>{const f=a.from[Math.min(j,a.from.length-1)];return[f[0]+(pt[0]-f[0])*e,f[1]+(pt[1]-f[1])*e]});strokeGroove(ctx,q,1,this.cfg.pal);if(k>=1){strokeGroove(this.dink.c,a.p,1,this.cfg.pal);this.gapUntil=now+20;return false}return true}strokeGroove(ctx,a.p,k,this.cfg.pal);if(k>=1){strokeGroove(this.dink.c,a.p,1,this.cfg.pal);this.gapUntil=now+(a.fast?20:50);return false}const tip=pathPoint(a.p,k);ctx.save();ctx.fillStyle="rgba(0,0,0,0.5)";ctx.beginPath();ctx.arc(tip[0]+0.8,tip[1]+1,2.1,0,6.3);ctx.fill();ctx.fillStyle="rgba(255,246,225,0.92)";ctx.beginPath();ctx.arc(tip[0],tip[1],1.5,0,6.3);ctx.fill();ctx.restore();return true});
     if(this.draft&&this.caretPos&&!this.anim.length&&!this.animQueue.length&&!this.hold&&Math.floor(now/560)%2===0){const [cx,cy]=this.caretPos;ctx.save();ctx.lineCap="round";ctx.strokeStyle="rgba(0,0,0,0.6)";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(cx+3.2,cy+2);ctx.lineTo(cx+3.2,cy+GL.s+0.5);ctx.stroke();ctx.strokeStyle="rgba(255,246,225,0.8)";ctx.lineWidth=0.9;ctx.beginPath();ctx.moveTo(cx+2.5,cy+1.6);ctx.lineTo(cx+2.5,cy+GL.s);ctx.stroke();ctx.restore()}
   },
@@ -1337,22 +1382,41 @@ const LAT=(()=>{
 })();
 /* 글자의 획들(한글 자모·음절, 영문·숫자·문장부호). 없으면 null → 대체 글꼴 */
 function glyphStrokes(ch){return HJ.syl(ch)||LAT[ch]||null}
+/* 2026-11-13: 바뀐 글자에서 '이미 있던 획'이 몇 개인지 — 앞에서부터 모양이 같은(0.06칸 안) 획 수. ㄱ→가는 1, 가→강은 3, 강→가(받침이 다음 글자로)는 3 */
+function strokeKeep(oldCh,newCh){const a=glyphStrokes(oldCh)||[],b=glyphStrokes(newCh)||[];let n=0;while(n<a.length&&n<b.length&&a[n].length===b[n].length&&a[n].every((pt,j)=>Math.abs(pt[0]-b[n][j][0])<=0.06&&Math.abs(pt[1]-b[n][j][1])<=0.06))n++;return n}
 /* 종이에 만년필: 포스트잇 글씨도 획순대로. 정적 렌더(paperInk)와 치는 대로 긋는 writer */
-const INK_PAL={shadow:"rgba(0,0,0,0)",groove:"#2a2622",hi:"rgba(0,0,0,0)",pen:true};
+const INK_PAL={shadow:"rgba(29,24,18,0.42)",groove:"#1d1812",hi:"rgba(0,0,0,0)",pen:true};
 /* 사용자의 줄바꿈을 지키고, 단어가 칸을 넘기면 다음 줄로. 긴 단어는 글자 단위로 */
 function paperLayout(text,cols){const out=[];let line=0,col=0;const push=ch=>{out.push({ch,px:6+col*GL.adv,py:6+line*GL.lh});col++};const nl=()=>{line++;col=0};
   text.split("\n").forEach((ln,li)=>{if(li>0)nl();ln.split(" ").forEach((wd,wi)=>{const L=Array.from(wd);if(wi>0&&col>0){if(col>=cols)nl();else push(" ")}if(L.length<=cols&&col+L.length>cols)nl();L.forEach(ch=>{if(col>=cols)nl();push(ch)})})});return out}
-function paperSize(cv,text,cols,sc,minLines){const r=DPR();const L=paperLayout(text,cols);const lastLine=L.length?Math.round((L[L.length-1].py-6)/GL.lh):0;const lines=Math.max(minLines||2,lastLine+1+(text.endsWith("\n")?1:0)+((L.length&&Math.round((L[L.length-1].px-6)/GL.adv)>=cols-1)?1:0));const w=(10+cols*GL.adv)*sc,hh=(10+lines*GL.lh)*sc;const W=Math.round(w*r),H=Math.round(hh*r);if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H;cv.style.width=w+"px";cv.style.height=hh+"px";return true}return false}
+function paperSize(cv,text,cols,sc,minLines,res){const r=DPR()*(res||1);const L=paperLayout(text,cols);const lastLine=L.length?Math.round((L[L.length-1].py-6)/GL.lh):0;const lines=Math.max(minLines||2,lastLine+1+(text.endsWith("\n")?1:0)+((L.length&&Math.round((L[L.length-1].px-6)/GL.adv)>=cols-1)?1:0));const w=(10+cols*GL.adv)*sc,hh=(10+lines*GL.lh)*sc;const W=Math.round(w*r),H=Math.round(hh*r);if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H;cv.style.width=w+"px";cv.style.height=hh+"px";return true}return false}
 function paperGlyph(c,g,rnd,frac){const st=glyphStrokes(g.ch);if(st){st.forEach(s=>strokeGroove(c,jitterPath(s,g.px,g.py,GL.s,rnd),frac==null?1:frac,INK_PAL));return}if(g.ch.trim()){c.save();c.font="11px 'Nanum Pen Script',cursive";c.fillStyle=INK_PAL.groove;c.fillText(g.ch,g.px+2,g.py+9.2);c.restore()}}
-function paperInk(cv,text,cols,sc,seed){paperSize(cv,text,cols,sc,2);const r=DPR();const c=cv.getContext("2d");c.setTransform(r*sc,0,0,r*sc,0,0);c.clearRect(0,0,cv.width,cv.height);const rnd=seeded(seed||"paper");paperLayout(text,cols).forEach(g=>paperGlyph(c,g,rnd))}
-function paperWriter(cv,cols,sc,sound){const W={cv,cols,sc,sound:sound||"pen",text:"",queue:[],anim:null,raf:0,gap:0,
-  set(text){const oldL=paperLayout(W.text,cols),newL=paperLayout(text,cols);let i=0;while(i<oldL.length&&i<newL.length&&oldL[i].ch===newL[i].ch&&oldL[i].px===newL[i].px&&oldL[i].py===newL[i].py)i++;const oldCh=oldL[i]?oldL[i].ch:null;W.text=text;paperSize(cv,text,cols,sc,3);const r=DPR();const c=cv.getContext("2d");c.setTransform(r*sc,0,0,r*sc,0,0);c.clearRect(0,0,cv.width,cv.height);const rnd=seeded("paper");W.queue=[];W.anim=null;
-    newL.forEach((g,idx)=>{const st=glyphStrokes(g.ch);if(!st){paperGlyph(c,g,rnd);return}const paths=st.map(s=>jitterPath(s,g.px,g.py,GL.s,rnd));if(idx<i){paths.forEach(p=>strokeGroove(c,p,1,INK_PAL));return}let keep=0;if(idx===i&&oldCh&&oldL[i].px===g.px&&oldL[i].py===g.py){const a=glyphStrokes(oldCh)||[];keep=a.length&&paths.length>a.length?a.length:Math.max(0,paths.length-1)}const code=g.ch.codePointAt(0);let jong=0;if(idx===newL.length-1&&code>=0xAC00&&code<=0xD7A3&&(code-0xAC00)%28)jong=paths.length-(glyphStrokes(String.fromCodePoint(code-(code-0xAC00)%28))||[]).length;paths.forEach((p,pi)=>{if(pi<keep)strokeGroove(c,p,1,INK_PAL);else W.queue.push(jong&&pi>=paths.length-jong?{p,hold:performance.now()+350}:p)})});W.run()},
-  run(){if(W.raf)return;const tick=()=>{W.raf=0;const now=performance.now();const r=DPR();const c=cv.getContext("2d");c.setTransform(r*sc,0,0,r*sc,0,0);
-      if(!W.anim&&W.queue.length&&now>W.gap&&!(W.queue[0].hold>now)){let p=W.queue.shift();if(p.hold)p=p.p;let len=0;for(let k=1;k<p.length;k++)len+=Math.hypot(p[k][0]-p[k-1][0],p[k][1]-p[k-1][1]);const fast=W.queue.length>10;const dur=fast?Math.max(60,len*9):Math.max(130,len*22);W.anim={p,t0:now,dur};scratch(W.sound,dur)}
-      if(W.anim){const a=W.anim;const k=Math.min(1,(now-a.t0)/a.dur);strokeGroove(c,a.p,k,INK_PAL);if(k>=1){W.anim=null;W.gap=now+40}}
+function paperInk(cv,text,cols,sc,seed,res){paperSize(cv,text,cols,sc,2,res);const r=DPR()*(res||1);const c=cv.getContext("2d");c.setTransform(r*sc,0,0,r*sc,0,0);c.clearRect(0,0,cv.width,cv.height);const rnd=seeded(seed||"paper");paperLayout(text,cols).forEach(g=>paperGlyph(c,g,rnd))}
+function paperWriter(cv,cols,sc,sound){const W={cv,cols,sc,sound:sound||"pen",text:"",queue:[],anim:null,raf:0,gap:0,tT:0,base:null,
+  /* 2026-11-13: 글자가 바뀌어도(ㄱ→가→강) 긋던 획은 끝까지, 기다리던 획은 차례 그대로 — 처음부터 다시 긋거나 깜빡이지 않게. 획마다 '글자 번호:획 번호' 이름표(k) */
+  /* 다 그은 획은 숨은 밑종이(base)에 한 번만 긋고, 화면은 늘 '밑종이 + 긋는 획 한 번'. 예전처럼 화면에 매번 덧그리면 획 가장자리가 겹쳐 굵어졌다가,
+     다시 그릴 때(칠 때마다) 한 번 그은 굵기로 가늘어져 앞 글씨가 깜빡여 보였다. 이제 쓰는 동안 굵기 = 남긴 쪽지·포스트잇(paperInk) 굵기 */
+  ctxB(){if(!W.base)W.base=document.createElement("canvas");if(W.base.width!==cv.width||W.base.height!==cv.height){W.base.width=cv.width;W.base.height=cv.height}const b=W.base.getContext("2d"),r=DPR();b.setTransform(r*sc,0,0,r*sc,0,0);return b},
+  paint(now){const c=cv.getContext("2d");c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,cv.width,cv.height);if(W.base)c.drawImage(W.base,0,0);if(W.anim){const r=DPR();c.setTransform(r*sc,0,0,r*sc,0,0);strokeGroove(c,W.anim.p,Math.min(1,(now-W.anim.t0)/W.anim.dur),INK_PAL)}},
+  set(text){clearTimeout(W.tT);W.tT=0;const oldL=paperLayout(W.text,cols),newL=paperLayout(text,cols);let i=0;while(i<oldL.length&&i<newL.length&&oldL[i].ch===newL[i].ch&&oldL[i].px===newL[i].px&&oldL[i].py===newL[i].py)i++;const oldCh=oldL[i]?oldL[i].ch:null;
+    const was=new Map();if(W.anim&&W.anim.k)was.set(W.anim.k,{st:"anim"});W.queue.forEach(q=>{if(q.k)was.set(q.k,{st:"queue",q})});
+    W.text=text;paperSize(cv,text,cols,sc,3);const c=W.ctxB();c.save();c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,W.base.width,W.base.height);c.restore();const rnd=seeded("paper");const queue=[];let anim=null;
+    newL.forEach((g,idx)=>{const st=glyphStrokes(g.ch);if(!st){paperGlyph(c,g,rnd);return}const paths=st.map(s=>jitterPath(s,g.px,g.py,GL.s,rnd));
+      let keep=0;if(idx<i)keep=paths.length;else if(idx===i&&oldCh&&oldL[i].px===g.px&&oldL[i].py===g.py)keep=strokeKeep(oldCh,g.ch);
+      const code=g.ch.codePointAt(0);let jong=0;if(idx===newL.length-1&&code>=0xAC00&&code<=0xD7A3&&(code-0xAC00)%28)jong=paths.length-(glyphStrokes(String.fromCodePoint(code-(code-0xAC00)%28))||[]).length;
+      paths.forEach((p,pi)=>{const k=idx+":"+pi,isJ=jong&&pi>=paths.length-jong,w=pi<keep?was.get(k):null;
+        if(pi<keep&&!w){strokeGroove(c,p,1,INK_PAL);return}
+        if(w&&w.st==="anim"){W.anim.p=p;anim=W.anim;return}
+        queue.push(isJ?{p,k,hold:performance.now()+350}:{p,k})})});
+    /* 화면은 곧바로 '밑종이 + 긋던 획(지금까지 그은 만큼)' — 다음 화면을 기다리는 동안에도 빈 틈이 없게 */
+    W.queue=queue;W.anim=anim;W.paint(performance.now());W.run()},
+  /* 입력이 '줄어들기만' 한 순간(아이폰 한글 자판의 '지우고 다시 넣기')은 0.08초 기다려 본다 */
+  input(text){clearTimeout(W.tT);W.tT=0;if(text.length<W.text.length&&W.text.startsWith(text)){W.tT=setTimeout(()=>{W.tT=0;W.set(text)},80);return}W.set(text)},
+  run(){if(W.raf)return;const tick=()=>{W.raf=0;const now=performance.now();
+      if(!W.anim&&W.queue.length&&now>W.gap&&!(W.queue[0].hold>now)){const q=W.queue.shift(),p=q.p;let len=0;for(let k=1;k<p.length;k++)len+=Math.hypot(p[k][0]-p[k-1][0],p[k][1]-p[k-1][1]);const fast=W.queue.length>10;const dur=fast?Math.max(60,len*9):Math.max(130,len*22);W.anim={p,t0:now,dur,k:q.k};scratch(W.sound,dur)}
+      if(W.anim){const a=W.anim;if(now-a.t0>=a.dur){strokeGroove(W.ctxB(),a.p,1,INK_PAL);W.anim=null;W.gap=now+40}W.paint(now)}
       if(W.anim||W.queue.length)W.raf=requestAnimationFrame(tick)};W.raf=requestAnimationFrame(tick)},
-  stop(){cancelAnimationFrame(W.raf);W.raf=0;W.queue=[];W.anim=null}};return W}
+  stop(){cancelAnimationFrame(W.raf);W.raf=0;clearTimeout(W.tT);W.tT=0;W.queue=[];W.anim=null}};return W}
 /* 달 위상: 2000-01-06 18:14 UTC 삭 기준, 삭망월 29.530588853일 */
 function moonPhase(date){const dt=date instanceof Date?date:new Date(date||Date.now());const el=((moonPos(dt).lon-sunPos(dt).lon)%360+360)%360;const p=el/360;const age=p*29.530588853;const illum=(1-Math.cos(el*D2R))/2;
   const names=[[1.85,"삭"],[5.54,"초승달"],[9.23,"상현달"],[12.91,"차오르는 볼록달"],[16.61,"보름달"],[20.3,"이지러지는 볼록달"],[23.99,"하현달"],[27.68,"그믐달"],[30,"삭"]];
@@ -1470,7 +1534,7 @@ const beach={cv:null,raf:0,t0:0,w:0,h:0,noise:null,stars:[],board:null,knownWave
       panTo:(markY,edB)=>this.cam.panTo(markY,edB),panBack:()=>this.cam.panBack(),freeze:on=>this.cam.freeze(on)});
       this.cam=makeCam({w:()=>this.w,vh:()=>this.h,H:()=>this.H(),board:()=>this.board,freeze:on=>this.freeze(on)});
       this.cam.bind($("#w-beach"),(sx,sy)=>{if(this.tapMoon(sx,sy))return;this.board.tap(sx,sy)});
-      $("#btext").addEventListener("input",()=>this.board.onType());$("#btext").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.isComposing){e.preventDefault();this.board.save()}});$("#bsave").addEventListener("click",()=>this.board.save());$("#banon").addEventListener("click",()=>this.board.save("익명"));$("#bcancel").addEventListener("click",()=>this.board.cancelEdit());
+      $("#btext").addEventListener("input",()=>this.board.onInput());$("#btext").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.isComposing){e.preventDefault();this.board.save()}});$("#bsave").addEventListener("click",()=>this.board.save());$("#banon").addEventListener("click",()=>this.board.save("익명"));$("#bcancel").addEventListener("click",()=>this.board.cancelEdit());
       const rs=seeded("beachstars");for(let i=0;i<110;i++)this.stars.push([rs(),rs()*0.15,rs()]);
       this.initGL()}
     this.t0=performance.now();this.knownWave=lastWaveBefore(Date.now());this.board.inkDirty=true;this.loop();this.renderTraces();if(!this.gl&&$("#w-beach canvas.sea")&&!$("#w-beach canvas.sea").hidden)this.initGL()},
@@ -1551,20 +1615,36 @@ const beach={cv:null,raf:0,t0:0,w:0,h:0,noise:null,stars:[],board:null,knownWave
 const DPR=()=>Math.min(2,devicePixelRatio||1);
 function mkLayer(w,h){const cv=document.createElement("canvas");const r=DPR();cv.width=Math.floor(w*r);cv.height=Math.floor(h*r);const c=cv.getContext("2d");c.setTransform(r,0,0,r,0,0);return{cv,c}}
 const cafe={cv:null,raf:0,t0:0,discs:[],lights:null,layer:null,drops:[],runners:[],streaks:[],hits:[],dirty:true,lastLayer:0,w:0,h:0,lastTap:null,nextRun:0,nextHit:0,color:0,writer:null,
+  /* 2026-11-13: 해변·초원처럼 끌기·확대(카메라 cam). 포스트잇 층은 같은 변환(domK), 확대한 채 멈추면 글씨를 그 배율로 다시(sharpK) */
+  cam:null,camT:0,layerView:null,domK:"",sharpK:"",
   start(){this.cv=$("#w-cafe canvas");
-    if(!this.bound){this.bound=true;dragger($("#w-cafe"),()=>{},(x,y)=>{if(y<innerHeight*0.1||y>innerHeight*0.88)return;if(!$("#cafeedit").hidden){const g=$("#edtext");if(g)try{g.focus({preventScroll:true})}catch(e){}return}
-        /* 남의 포스트잇을 가리면 안 된다 */const W=92,Hh=80;const hit=[...document.querySelectorAll("#cafetraces .postit")].some(el=>{const r=el.getBoundingClientRect();return x<r.right+6&&x+W>r.left-6&&y<r.bottom+6&&y+Hh>r.top-6});
-        if(hit){thud();const hint=$("#cafehint");hint.classList.add("bright");hint.textContent="타인의 포스트잇을 가리는 건 비매너입니다. 빈 자리를 골라 주세요.";return}
-        this.placing=false;this.beginEdit({x:x/innerWidth,y:y/innerHeight})});
-      this.writer=paperWriter($("#edink"),8,0.72,"pencil");
-      $("#edtext").addEventListener("input",()=>{$("#edcount").textContent=$("#edtext").value.length;this.writer.set($("#edtext").value);DRAFT.set("cafe",{text:$("#edtext").value,c:this.color})});
+    if(!this.bound){this.bound=true;
+      /* 2026-11-13: 해변·초원과 같은 카메라와 손짓 — 한 손가락 끌기, 두 손가락 확대(최대 3배), 휠(컨트롤+휠은 확대). 톡은 tapAt */
+      this.cam=makeCam({w:()=>this.w,vh:()=>this.h,H:()=>this.h,board:()=>null});
+      gestures($("#w-cafe"),{tap:(x,y)=>this.tapAt(x,y),pan:(dx,dy)=>{this.cam.pan(dx,dy);this.camMoved()},pinch:(mx,my,r)=>{this.cam.zoomAt(mx,my,r);this.camMoved()}});
+      this.writer=paperWriter($("#edink"),8,1,"pencil");
+      $("#edtext").addEventListener("input",()=>{$("#edcount").textContent=$("#edtext").value.length;this.writer.input($("#edtext").value);DRAFT.set("cafe",{text:$("#edtext").value,c:this.color})});
       $("#eddraft").addEventListener("pointerdown",e=>{e.preventDefault();try{$("#edtext").focus({preventScroll:true})}catch(x){$("#edtext").focus()}});
       $("#edsave").addEventListener("click",()=>this.save());$("#edcancel").addEventListener("click",()=>this.cancelEdit());
       $$("#edsw button").forEach(b=>b.addEventListener("click",()=>{this.color=+b.dataset.c;$$("#edsw button").forEach(x=>x.classList.toggle("on",x===b));$("#cafeedit .draft").className="postit draft c"+this.color}))}
+    this.cam.view={s:1,x:0,y:0};this.cam.va=null;this.domK="";this.sharpK="";
     this.t0=performance.now();this.loop();this.renderTraces()},
   stop(){cancelAnimationFrame(this.raf);this.raf=0;this.cancelEdit()},
   onVisible(){this.w=0},
-  loop(){if(curWorld!=="cafe")return;if(!document.hidden)this.draw();this.raf=setTimeout(()=>requestAnimationFrame(()=>this.loop()),33)},
+  /* 톡(2026-11-13 — 끌기·확대와 같은 손짓 처리기에서 온다): 포스트잇 위면 읽기, 쓰는 중이면 글칸으로, 빈 유리면 그 자리에 붙이기 */
+  tapAt(x,y){const pe=(document.elementsFromPoint?document.elementsFromPoint(x,y):[]).map(el=>el.closest&&el.closest("#cafetraces .postit")).find(Boolean);if(pe){if(pe._d)openDetail("cafe",pe._d);return}
+    if(y<innerHeight*0.1||y>innerHeight*0.88)return;if(!$("#cafeedit").hidden){const g=$("#edtext");if(g)try{g.focus({preventScroll:true})}catch(e){}return}
+    /* 남의 포스트잇을 가리면 안 된다(확대 중이면 새 장도 그만큼 크게 본다) */const s=this.cam.view.s,W=130*s,Hh=84*s;const hit=[...document.querySelectorAll("#cafetraces .postit")].some(el=>{const r=el.getBoundingClientRect();return x<r.right+6&&x+W>r.left-6&&y<r.bottom+6&&y+Hh>r.top-6});
+    if(hit){thud();const hint=$("#cafehint");hint.classList.add("bright");hint.textContent="타인의 포스트잇을 가리는 건 비매너입니다. 빈 자리를 골라 주세요.";return}
+    const [sx,sy]=this.cam.toScene(x,y);this.placing=false;this.beginEdit({x:sx/this.w,y:sy/this.h})},
+  camMoved(){this.camT=performance.now()},
+  /* 포스트잇 층과 붙일 자리 표시가 유리와 같이 움직이게 */
+  applyDom(){const v=this.cam.view,k=v.s.toFixed(4)+","+v.x.toFixed(2)+","+v.y.toFixed(2);if(k===this.domK)return;this.domK=k;const box=$("#cafetraces");box.style.transformOrigin="0 0";box.style.transform=(v.s===1&&v.x===0&&v.y===0)?"":"translate("+(-v.x*v.s)+"px,"+(-v.y*v.s)+"px) scale("+v.s+")";this.placeMark()},
+  placeMark(){const m=$("#cafemark");if(!m||m.hidden||!this.lastTap||!this.w)return;const v=this.cam.view;m.style.left=((this.lastTap.x*this.w-v.x)*v.s)+"px";m.style.top=((this.lastTap.y*this.h-v.y)*v.s)+"px"},
+  /* 확대한 채 멈추면 보이는 포스트잇 글씨를 그 배율로 다시 그린다(늘인 그림이 아니라 또렷한 획). 안 보이는 것은 1배로 돌려 메모리를 아낀다 */
+  sharpen(){this.sharpK=this.domK;const s=this.cam.view.s,k=Math.min(3,Math.ceil(s*2-1e-6)/2);
+    document.querySelectorAll("#cafetraces .postit").forEach(el=>{const cv=el.querySelector("canvas.pink");if(!cv||!el._d)return;const r=el.getBoundingClientRect();const vis=r.right>-40&&r.left<innerWidth+40&&r.bottom>-40&&r.top<innerHeight+40;const want=vis?k:1;if((cv._res||1)===want)return;cv._res=want;paperInk(cv,el._d.text||"",8,1,el._d.id,want)})},
+  loop(){if(curWorld!=="cafe")return;if(!document.hidden)this.draw();/* 끌거나 벌리는 동안은 매 화면(부드럽게), 평소엔 초당 30장 */const fast=performance.now()-this.camT<300;this.raf=setTimeout(()=>requestAnimationFrame(()=>this.loop()),fast?0:33)},
   /* 유리 바깥의 밤: 초점이 완전히 나간 거리 — 동그란 보케가 아니라 커다란 색 얼룩 몇 개.
      그 위에 김 서린 안개 한 겹. 물방울은 안개가 닦인 자리라서 주변보다 조금 진하고 조금 또렷할 뿐, 윤기는 없다 */
   setup(w,h){
@@ -1573,7 +1653,7 @@ const cafe={cv:null,raf:0,t0:0,discs:[],lights:null,layer:null,drops:[],runners:
     for(let i=0;i<36;i++){const big=r()<0.3;const c=cols[Math.floor(r()*cols.length)];this.discs.push({x:r(),y:0.03+r()*0.72,r:(big?0.13+r()*0.1:0.03+r()*0.08)*Math.min(w,520),c,a:big?0.26+r()*0.22:0.33+r()*0.4,p:r()*6.28,f:0.3+r()*1.2})}
     const L=mkLayer(w,h);this.lights=L.cv;this.drawBg(L.c,w,h);this.drawDiscs(L.c,w,h,0,true);
     this.drops=[];for(let i=0;i<330;i++)this.drops.push(this.mkDrop(r()*w,r()*h,r()));
-    this.layer=mkLayer(w,h);this.dirty=true;this.runners=[];this.streaks=[];
+    this.layer=mkLayer(w,h);this.dirty=true;this.runners=[];this.streaks=[];this.layerView=null;this.domK="";if(this.cam)this.cam.clamp(this.cam.view);
   },
   mkDrop(x,y,q){const r=q<0.08?5+Math.random()*4:q<0.5?1.2+Math.random()*1.6:2+Math.random()*2.6;return{x,y,r,e:1+Math.random()*0.35}},
   drawBg(c,w,h){const g=c.createLinearGradient(0,0,0,h);g.addColorStop(0,"#02030a");g.addColorStop(0.55,"#06091a");g.addColorStop(1,"#08080c");c.fillStyle=g;c.fillRect(0,0,w,h);
@@ -1592,9 +1672,13 @@ const cafe={cv:null,raf:0,t0:0,discs:[],lights:null,layer:null,drops:[],runners:
     c.save();try{c.filter="blur(1.1px)"}catch(_){}c.beginPath();c.ellipse(x,y,r*1.08,r*e*1.08,0,0,6.2832);c.fillStyle="rgba(0,0,0,0.28)";c.fill();c.restore();
     c.save();c.beginPath();c.ellipse(x,y,r,r*e,0,0,6.2832);c.clip();const z=1.5;c.translate(x,y);c.scale(-z,-z);c.translate(-x,-y);c.globalAlpha=0.55;c.drawImage(this.lights,0,0,w,h);c.restore();
     c.save();c.beginPath();c.ellipse(x,y,r,r*e,0,0,6.2832);c.strokeStyle="rgba(0,0,0,0.22)";c.lineWidth=Math.max(0.8,r*0.16);c.stroke();c.restore()},
-  renderLayer(){const c=this.layer.c;c.clearRect(0,0,this.w,this.h);this.drops.forEach(d=>this.drawDrop(c,d.x,d.y,d.r,d.e,this.w,this.h));this.dirty=false;this.lastLayer=performance.now()},
+  /* 물방울 층: 지금 보이는 자리만, 지금 배율로 그린다(확대해도 흐리지 않게). 끄는 동안엔 0.09초마다 다시 그리고 그 사이엔 옮겨 쓴다 */
+  renderLayer(){const c=this.layer.c,v=this.cam?this.cam.view:{s:1,x:0,y:0},dp=DPR();c.setTransform(dp,0,0,dp,0,0);c.clearRect(0,0,this.w,this.h);c.setTransform(dp*v.s,0,0,dp*v.s,-v.x*dp*v.s,-v.y*dp*v.s);
+    const x0=v.x-14,y0=v.y-14,x1=v.x+this.w/v.s+14,y1=v.y+this.h/v.s+14;this.drops.forEach(d=>{if(d.x<x0||d.x>x1||d.y<y0||d.y>y1)return;this.drawDrop(c,d.x,d.y,d.r,d.e,this.w,this.h)});
+    this.layerView={s:v.s,x:v.x,y:v.y};this.dirty=false;this.lastLayer=performance.now()},
   draw(){
-    const {ctx,w,h}=fitCanvas(this.cv);if(w!==this.w||h!==this.h)this.setup(w,h);const t=(performance.now()-this.t0)/1000,now=performance.now();
+    const {ctx,w,h}=fitCanvas(this.cv);if(w!==this.w||h!==this.h){this.setup(w,h);this.renderTraces()}const t=(performance.now()-this.t0)/1000,now=performance.now();
+    /* 2026-11-13: 유리 전체를 카메라 변환으로(장면 좌표 = 확대 1배일 때의 화면 좌표) */const v=this.cam.view,dp=DPR();this.cam.apply(ctx);
     this.drawBg(ctx,w,h);this.drawDiscs(ctx,w,h,t,false);
     /* 밤안개: 창 밖 거리의 빛이 뿌옇게 번진다 (레이니 무드처럼). 천둥이 치면 잠깐 환해진다 */
         {const mg=ctx.createLinearGradient(0,0,0,h);mg.addColorStop(0,"rgba(120,135,160,0.10)");mg.addColorStop(0.5,"rgba(140,150,170,0.16)");mg.addColorStop(1,"rgba(90,100,120,0.22)");ctx.fillStyle=mg;ctx.fillRect(0,0,w,h);const sw=ctx.createRadialGradient(w*0.5+Math.sin(t*0.07)*w*0.2,h*0.45,0,w*0.5,h*0.45,w*0.9);sw.addColorStop(0,"rgba(150,160,180,"+(0.06+0.03*Math.sin(t*0.21))+")");sw.addColorStop(1,"rgba(150,160,180,0)");ctx.fillStyle=sw;ctx.fillRect(0,0,w,h);}
@@ -1608,13 +1692,14 @@ const cafe={cv:null,raf:0,t0:0,discs:[],lights:null,layer:null,drops:[],runners:
     });
     this.runners=this.runners.filter(ru=>ru.y<h+20);
     this.streaks=this.streaks.filter(s=>now-s.t<7000);ctx.save();ctx.globalCompositeOperation="lighter";this.streaks.forEach(s=>{const k=1-(now-s.t)/7000;ctx.fillStyle="rgba(170,185,210,"+(0.09*k)+")";ctx.beginPath();ctx.ellipse(s.x,s.y,s.r,s.r*1.4,0,0,6.2832);ctx.fill()});ctx.restore();
-    if(this.dirty&&now-this.lastLayer>350)this.renderLayer();
-    ctx.drawImage(this.layer.cv,0,0,w,h);
+    {const L=this.layerView;if(!L||((L.s!==v.s||L.x!==v.x||L.y!==v.y)&&now-this.lastLayer>90)||(this.dirty&&now-this.lastLayer>350))this.renderLayer();
+     const M=this.layerView,k=v.s/M.s;ctx.save();ctx.setTransform(dp*k,0,0,dp*k,(M.x-v.x)*v.s*dp,(M.y-v.y)*v.s*dp);ctx.drawImage(this.layer.cv,0,0,w,h);ctx.restore()}
     this.runners.forEach(ru=>this.drawRunner(ctx,ru,w,h));
     /* 두꺼운 통유리: 안쪽 면의 희미한 이중 반사 + 가장자리의 녹빛 */
     ctx.save();ctx.globalAlpha=0.07;ctx.globalCompositeOperation="lighter";ctx.drawImage(this.lights,3,4,w,h);ctx.restore();
     {const eg=ctx.createLinearGradient(0,0,w,0);eg.addColorStop(0,"rgba(90,140,120,0.16)");eg.addColorStop(0.08,"rgba(90,140,120,0)");eg.addColorStop(0.92,"rgba(90,140,120,0)");eg.addColorStop(1,"rgba(90,140,120,0.16)");ctx.fillStyle=eg;ctx.fillRect(0,0,w,h)}
     const rg=ctx.createLinearGradient(0,h*0.8,0,h);rg.addColorStop(0,"rgba(60,40,20,0)");rg.addColorStop(1,"rgba(80,55,28,0.3)");ctx.fillStyle=rg;ctx.fillRect(0,h*0.8,w,h*0.2);
+    this.applyDom();if(now-this.camT>220&&this.sharpK!==this.domK)this.sharpen();
   },
   /* [포스트잇 붙이기] → 자리를 고르게 한다 */
   beginPlace(){const gate=dbGateMsg();if(gate){openSheet('<h3>포스트잇 붙이기</h3><p class="note">'+esc(gate)+'</p><div class="acts"><button id="sheetclose">닫기</button></div>');$("#sheetclose").addEventListener("click",closeSheet);return}
@@ -1622,11 +1707,11 @@ const cafe={cv:null,raf:0,t0:0,discs:[],lights:null,layer:null,drops:[],runners:
   beginEdit(pos){
     const gate=dbGateMsg();if(gate){openSheet('<h3>포스트잇 붙이기</h3><p class="note">'+esc(gate)+'</p><div class="acts"><button id="sheetclose">닫기</button></div>');$("#sheetclose").addEventListener("click",closeSheet);return}
     const left=slowLeft();if(left>0){openSheet('<h3>포스트잇 붙이기</h3><p class="note">흔적은 5분에 하나입니다. '+Math.ceil(left/60000)+'분 뒤에 다시 붙일 수 있습니다. 그동안은 타인의 것을 읽으십시오.</p><div class="acts"><button id="sheetclose">닫기</button></div>');$("#sheetclose").addEventListener("click",closeSheet);return}
-    this.lastTap=pos||{x:0.2+Math.random()*0.6,y:0.2+Math.random()*0.5};
+    this.lastTap=pos||{x:0.2+Math.random()*0.6,y:0.2+Math.random()*0.5};/* 포스트잇(여백까지 130px)이 유리 오른쪽 끝을 넘지 않게 */if(this.w)this.lastTap.x=Math.min(this.lastTap.x,Math.max(0,(this.w-132)/this.w));
     const dr=DRAFT.get("cafe");if(dr&&dr.c!=null)this.color=dr.c;$$("#edsw button").forEach(x=>x.classList.toggle("on",+x.dataset.c===this.color));
     const ed=$("#cafeedit");ed.hidden=false;$("#cafeedit .draft").className="postit draft c"+this.color;$("#edtext").value=(dr&&dr.text)||"";$("#edcount").textContent=$("#edtext").value.length;$("#ederr").textContent=(dr&&dr.text)?"지난 초고를 되살렸습니다.":"";this.writer.text="";this.writer.set($("#edtext").value);
     const nk=$("#ednick");nk.value=memberName()||ls.get("nick","");nk.disabled=!!memberName();
-    const m=$("#cafemark");m.hidden=false;m.style.left=(this.lastTap.x*100)+"%";m.style.top=(this.lastTap.y*100)+"%";
+    const m=$("#cafemark");m.hidden=false;m.style.left=(this.lastTap.x*100)+"%";m.style.top=(this.lastTap.y*100)+"%";this.placeMark();
     $("#cafehint").classList.remove("bright");$("#cafehint").textContent="표시한 자리에 붙습니다. 글씨는 쓰는 대로 종이에 적힙니다.";
     setTimeout(()=>$("#edtext").focus(),60);
   },
@@ -1641,10 +1726,10 @@ const cafe={cv:null,raf:0,t0:0,discs:[],lights:null,layer:null,drops:[],runners:
     $("#edsave").disabled=false;
   },
   renderTraces(){
-    const box=$("#cafetraces");box.textContent="";const S=subs.cafe;const docs=liveDocs("cafe");const hint=$("#cafehint");
+    const box=$("#cafetraces");box.textContent="";this.sharpK="";const S=subs.cafe;const docs=liveDocs("cafe");const hint=$("#cafehint");
     if(!db)hint.textContent=dbGateMsg();else if(S&&S.err==="slow")hint.textContent="수신이 늦어지고 있습니다…";else if(S&&S.ready&&!docs.length)hint.textContent="유리가 비어 있습니다. 빈 자리를 눌러 첫 장을 붙이십시오.";
-    docs.slice().reverse().forEach(d=>{const el=document.createElement("div");const age=(Date.now()-(d.t||0))/WORLDS.cafe.ttl;el.className="postit c"+((d.c||0)%4);el.dataset.id=d.id;el.style.left=((d.x||0.3)*100)+"%";el.style.top=((d.y||0.3)*100)+"%";el.style.transform="rotate("+((d.r||0)+(age>0.66?(d.r>0?6:-6):0))+"deg)";el.style.opacity=String(Math.max(0.35,1-age*0.6));
-      const cv=document.createElement("canvas");cv.className="pink";el.append(cv);paperInk(cv,d.text||"",8,0.72,d.id);const sm=document.createElement("small");sm.textContent=(d.nick||"")+" · "+fmtClock(new Date(d.t||0))+(d.likes?" · +"+d.likes:"");el.append(sm);el.addEventListener("click",()=>openDetail("cafe",d));box.append(el)});
+    docs.slice().reverse().forEach(d=>{const el=document.createElement("div");const age=(Date.now()-(d.t||0))/WORLDS.cafe.ttl;el.className="postit c"+((d.c||0)%4);el.dataset.id=d.id;el.style.left=((this.w?Math.min(d.x||0.3,Math.max(0,(this.w-132)/this.w)):(d.x||0.3))*100)+"%";el.style.top=((d.y||0.3)*100)+"%";el.style.transform="rotate("+((d.r||0)+(age>0.66?(d.r>0?6:-6):0))+"deg)";el.style.opacity=String(Math.max(0.35,1-age*0.6));
+      const cv=document.createElement("canvas");cv.className="pink";el.append(cv);paperInk(cv,d.text||"",8,1,d.id);const sm=document.createElement("small");sm.textContent=(d.nick||"")+" · "+fmtClock(new Date(d.t||0))+(d.likes?" · +"+d.likes:"");el.append(sm);el._d=d;box.append(el)});
   }};
 
 /* ============ 하늘 (실시간 계산) ============ */
@@ -2058,7 +2143,7 @@ const shelf={poem:null,noteUnsub:null,open:null,key:"",cx:0,cy:0,cz:-150,yaw:0,p
     $("#sheetclose").addEventListener("click",closeSheet);this.noteColor=0;
     $$("#nsw button").forEach(b=>b.addEventListener("click",()=>{this.noteColor=+b.dataset.c;$$("#nsw button").forEach(x=>x.classList.toggle("on",x===b));$("#ndraft").className="postit draft c"+this.noteColor}));
     const nw=paperWriter($("#nink"),9,0.85,"pencil");nw.set($("#ntext").value);
-    $("#ntext").addEventListener("input",()=>{nw.set($("#ntext").value);DRAFT.set("note_"+d.id,{text:$("#ntext").value})});$("#ndraft").addEventListener("pointerdown",e=>{e.preventDefault();try{$("#ntext").focus({preventScroll:true})}catch(x){$("#ntext").focus()}});setTimeout(()=>$("#ntext").focus(),60);
+    $("#ntext").addEventListener("input",()=>{nw.input($("#ntext").value);DRAFT.set("note_"+d.id,{text:$("#ntext").value})});$("#ndraft").addEventListener("pointerdown",e=>{e.preventDefault();try{$("#ntext").focus({preventScroll:true})}catch(x){$("#ntext").focus()}});setTimeout(()=>$("#ntext").focus(),60);
     $("#nanon").addEventListener("click",()=>{$("#nnick").value="익명"});
     $("#nsend").addEventListener("click",async()=>{const t=$("#ntext").value.trim();const bad=screen(t,120);if(bad){$("#nerr").textContent=bad;return}const nick=($("#nnick").value.trim()||"익명의 불면자").slice(0,12);if(await nickTaken(nick)){$("#nerr").textContent='"'+nick+'"는 다른 사람이 선점한 아이디입니다.';return}if(!memberName())ls.set("nick",$("#nnick").value.trim());$("#nsend").disabled=true;try{const nd={poem:d.id,text:t,nick,t:Date.now(),c:this.noteColor};const ref=await db.collection("notes").add(nd);markMine("notes",ref&&ref.id);localInsert("notes",ref&&ref.id,nd);markWrite();DRAFT.clear("note_"+d.id);closeSheet();$("#shelfhint").textContent="벽에 붙였습니다 — "+fmtClock(new Date())}catch(e){$("#nerr").textContent=writeFailText(e);$("#nsend").disabled=false}});
   }};
@@ -2404,7 +2489,7 @@ const sav={cv:null,raf:0,t0:0,w:0,h:0,noise:null,stars:[],embers:[],board:null,f
       panTo:(markY,edB)=>this.cam.panTo(markY,edB),panBack:()=>this.cam.panBack(),freeze:on=>this.freeze(on)});
       this.cam=makeCam({w:()=>this.w,vh:()=>this.h,H:()=>this.H(),board:()=>this.board,vy:y=>this.vy(y),freeze:on=>this.freeze(on)});
       this.cam.bind($("#w-savanna"),(sx,sy)=>this.board.tap(sx,this.by(sy)));
-      $("#stext").addEventListener("input",()=>this.board.onType());$("#stext").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.isComposing){e.preventDefault();this.board.save()}});$("#ssave").addEventListener("click",()=>this.board.save());$("#scancel").addEventListener("click",()=>this.board.cancelEdit());
+      $("#stext").addEventListener("input",()=>this.board.onInput());$("#stext").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.isComposing){e.preventDefault();this.board.save()}});$("#ssave").addEventListener("click",()=>this.board.save());$("#scancel").addEventListener("click",()=>this.board.cancelEdit());
       $("#woodbtn").addEventListener("click",()=>this.addWood());
       const rs=seeded("savstars");for(let i=0;i<160;i++)this.stars.push([rs(),rs()*0.42,rs()]);
       const rt=seeded("acacia");for(let i=0;i<4;i++)this.trees.push({x:0.08+rt()*0.84,s:0.5+rt()*0.9,w:0.07+rt()*0.09})}
@@ -2636,6 +2721,64 @@ function openShare(){
   on("sh-th",()=>shareOpen("https://www.threads.com/intent/post?text="+encodeURIComponent(sharePost())+"&url="+encodeURIComponent(SHARE.url)));
   shareReady()}
 document.addEventListener("click",e=>{const s=e.target.closest("[data-share]");if(s&&!s.disabled)openShare()});
+
+/* ============ 음량 막대 (2026-11-13 사용자 요청: "하단 재생바에 음량 조절 — 쾌감이 느껴지는 UI", 디럭스는 세계 안에서도) ============
+   아래 재생줄(디럭스는 세계 아래줄에도)의 [음량 35] → 바로 위로 32칸 LED 막대가 올라온다. 손가락을 따라 칸이 켜지고,
+   끝 칸은 ATDT 커서처럼 하얗게 빛난다. 숫자는 세 자리(035). 소리는 원래 음량 손잡이(#vol)와 같은 길로 — 주 음량만
+   0.05초로 부드럽게 바뀌고, 소리 길(직통·다리)은 건드리지 않는다. 안드로이드는 칸을 넘을 때 아주 짧은 진동(3ms, 25ms에 한 번까지).
+   3.5초 손대지 않으면 내려가고, 바깥을 누르거나 뒤로가기·ESC로 닫힌다(바깥을 누른 한 번은 닫기만 — 모래에 글이 써지지 않게). 번쩍임 없음 */
+const VH={on:false,drag:false,t:0,seg:-1,buzz:0,rep:0,repT:0,eat:0,anchor:null,N:32};
+const VH_CALM=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
+function vhVal(){const v=+ls.get("vol",35);return isFinite(v)?Math.max(0,Math.min(100,Math.round(v))):35}
+function vhLit(v){return Math.round(v/100*VH.N)}
+function vhSegs(k){const s=$("#vhtrack").children;for(let i=0;i<s.length;i++)s[i].className=i<k?(i===k-1?"on tip":"on"):""}
+function vhPaint(v){
+  $$("[data-vol] .vn").forEach(n=>{n.textContent=v});
+  const tr=$("#vhtrack");if(!tr)return;
+  $("#vhnum").textContent=String(v).padStart(3,"0");vhSegs(vhLit(v));
+  tr.setAttribute("aria-valuenow",v);tr.setAttribute("aria-valuetext","음량 "+v);$("#volhud").classList.toggle("mute",v===0)}
+function vhSet(v){v=Math.max(0,Math.min(100,Math.round(v)));if(v!==+volEl.value){volEl.value=v;volEl.dispatchEvent(new Event("input"))}const v2=$("#vol2");if(v2)v2.value=v;vhPaint(v)}
+/* 칸을 넘는 순간 아주 짧은 진동(되는 기기만) */
+function vhTick(v){const k=vhLit(v);if(k===VH.seg)return;const now=performance.now();
+  if(VH.seg>=0&&typeof navigator.vibrate==="function"&&now-VH.buzz>25){try{navigator.vibrate(3)}catch(e){}VH.buzz=now}VH.seg=k}
+function vhFromX(x){const r=$("#vhtrack").getBoundingClientRect();return (x-r.left-5)/Math.max(1,r.width-10)*100}
+/* 누른 단추가 있는 줄 안으로 옮겨 그 줄 바로 위에 붙인다(재생줄이든 세계 아래줄이든) — 줄 높이가 바뀌어도(초원 안내 글 등) 따라 움직인다 */
+function vhPlace(){const hud=$("#volhud"),a=VH.anchor,bar=a&&(a.closest(".wbot")||a.closest("#statusbar"));if(bar&&hud.parentNode!==bar)bar.appendChild(hud)}
+function vhKeep(){clearTimeout(VH.t);VH.t=setTimeout(()=>{if(!VH.drag&&!VH.rep)vhClose()},3500)}
+function vhOpen(anchor){const hud=$("#volhud");VH.anchor=anchor;vhPlace();vhPaint(vhVal());hud.hidden=false;void hud.offsetWidth;hud.classList.add("on");VH.on=true;
+  $$("[data-vol]").forEach(b=>b.setAttribute("aria-expanded","true"));vhKeep();
+  if(VH_CALM)return;/* 열릴 때 칸이 0에서 지금 값까지 한 번 훑고 올라간다(0.2초) */
+  const k=vhLit(vhVal()),t0=performance.now();vhSegs(0);
+  const step=now=>{if(!VH.on||VH.drag)return;const p=Math.min(1,(now-t0)/200);vhSegs(Math.round(k*(1-Math.pow(1-p,3))));if(p<1)requestAnimationFrame(step)};requestAnimationFrame(step);
+  /* 화면 그리기가 느린 기기(저전력 등)에서도 0.26초 뒤엔 반드시 제 칸까지 켜져 있게 */
+  setTimeout(()=>{if(VH.on&&!VH.drag)vhPaint(vhVal())},260)}
+function vhClose(){const hud=$("#volhud");if(!hud||!VH.on)return;VH.on=false;VH.drag=false;clearTimeout(VH.t);clearTimeout(VH.repT);clearInterval(VH.rep);VH.rep=0;
+  hud.classList.remove("on","grab");$$("[data-vol]").forEach(b=>b.setAttribute("aria-expanded","false"));setTimeout(()=>{if(!VH.on)hud.hidden=true},200)}
+(()=>{
+  const tr=$("#vhtrack");
+  for(let i=0;i<VH.N;i++){const s=document.createElement("i"),p=i/(VH.N-1);
+    /* 왼쪽은 어두운 남색, 오른쪽으로 갈수록 밝은 청회색 — 크게 할수록 막대가 밝아진다 */
+    s.style.setProperty("--c","rgb("+Math.round(58+p*(150-58))+","+Math.round(70+p*(168-70))+","+Math.round(82+p*(192-82))+")");tr.append(s)}
+  tr.addEventListener("pointerdown",e=>{if(e.button>0)return;e.preventDefault();VH.drag=true;$("#volhud").classList.add("grab");try{tr.setPointerCapture(e.pointerId)}catch(_){}
+    VH.seg=vhLit(vhVal());const v=vhFromX(e.clientX);vhSet(v);vhTick(v);vhKeep()});
+  tr.addEventListener("pointermove",e=>{if(!VH.drag)return;const v=vhFromX(e.clientX);vhSet(v);vhTick(v)});
+  const end=()=>{if(!VH.drag)return;VH.drag=false;$("#volhud").classList.remove("grab");vhKeep()};
+  ["pointerup","pointercancel","lostpointercapture"].forEach(t=>tr.addEventListener(t,end));
+  tr.addEventListener("keydown",e=>{const d={ArrowLeft:-1,ArrowDown:-1,ArrowRight:1,ArrowUp:1,PageDown:-10,PageUp:10}[e.key];
+    let v=null;if(d)v=vhVal()+d;else if(e.key==="Home")v=0;else if(e.key==="End")v=100;if(v===null)return;e.preventDefault();e.stopPropagation();vhSet(v);vhKeep()});
+  /* −/+ : 누르면 한 칸, 꾹 누르면 0.38초 뒤부터 계속 */
+  [["vhdn",-1],["vhup",1]].forEach(([id,d])=>{const b=$("#"+id),go=()=>{const v=vhVal()+d;vhSet(v);vhTick(v)};
+    const stop=()=>{clearTimeout(VH.repT);if(VH.rep){clearInterval(VH.rep);VH.rep=0}vhKeep()};
+    b.addEventListener("pointerdown",e=>{if(e.button>0)return;e.preventDefault();VH.seg=vhLit(vhVal());go();clearTimeout(VH.repT);VH.repT=setTimeout(()=>{VH.rep=setInterval(go,55)},380);vhKeep()});
+    ["pointerup","pointerleave","pointercancel"].forEach(t=>b.addEventListener(t,stop));
+    b.addEventListener("click",e=>{if(e.detail===0){vhSet(vhVal()+d);vhKeep()}})});
+  volEl.addEventListener("input",()=>vhPaint(+volEl.value));
+  document.addEventListener("click",e=>{const b=e.target.closest("[data-vol]");if(!b)return;if(VH.on)vhClose();else vhOpen(b)});
+  /* 열려 있을 때 바깥을 누르면 닫기만 한다(그 한 번은 아래로 넘기지 않음) */
+  document.addEventListener("pointerdown",e=>{if(!VH.on||e.target.closest("#volhud,[data-vol]"))return;vhClose();VH.eat=performance.now();e.stopPropagation();e.preventDefault()},true);
+  document.addEventListener("click",e=>{if(VH.eat&&performance.now()-VH.eat<700){VH.eat=0;e.stopPropagation();e.preventDefault()}},true);
+  vhPaint(vhVal());
+})();
 
 /* ============ 시작 ============ */
 /* 앱 아이콘으로 열었을 때: 안드로이드 시작 화면과 똑같은 로고 — 켜진 커서가 다섯 번 보이고(일, 이, 삼, 사, 오) 다시 꺼지기 직전에 스르르 첫 화면으로(누르면 바로 넘어감) */

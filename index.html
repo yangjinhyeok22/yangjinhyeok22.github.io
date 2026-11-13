@@ -120,7 +120,7 @@ input[type=range]{width:150px;accent-color:var(--accent);background:transparent;
 /* 상태줄 */
 #statusbar{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--bg);border-top:1px solid var(--line);
   padding:7px max(16px,env(safe-area-inset-right,0px)) calc(14px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-#statusbar .inner{max-width:744px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"np vu play" "time time time";gap:2px 12px;align-items:center;color:var(--ink-lo);font-size:.9em}
+#statusbar .inner{max-width:744px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) auto auto;grid-template-areas:"np vu play" "time time vol";gap:2px 12px;align-items:center;color:var(--ink-lo);font-size:.9em}
 #statusbar .np{grid-area:np;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#statusbar #vu{grid-area:vu}#statusbar #sbplay{grid-area:play;min-width:4.2em}#statusbar .time{grid-area:time;display:flex;justify-content:space-between;white-space:nowrap}
 #statusbar .np b{color:var(--accent);font-weight:400}
 #statusbar button{padding:1px 9px;font-size:.95em}
@@ -158,6 +158,27 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
 /* 공유하기(2026-11-12): 겹창의 그림 · 주 메뉴 단추 */
 .shimg{display:block;width:auto;height:auto;max-width:100%;max-height:min(46vh,430px);margin:10px 0;border:1px solid var(--line)}
 .sharerow{margin-top:12px}
+/* 음량 막대(2026-11-13): 32칸 LED, 끝 칸은 ATDT 커서처럼 하얗게. 바뀌는 건 사람이 만질 때뿐(번쩍임 없음) */
+#volhud{position:absolute;left:50%;bottom:calc(100% + 10px);z-index:50;width:min(520px,calc(100vw - 32px));font-size:clamp(13px,1.6vw,14.5px);line-height:1.8;text-align:left;box-sizing:border-box;transform:translate(-50%,12px);opacity:0;
+  transition:opacity .18s ease,transform .18s ease,border-color .15s;background:#040404;border:1px solid var(--accent-dim);
+  box-shadow:0 0 0 3px #000,0 0 0 4px var(--line),0 12px 40px rgba(0,0,0,.85);padding:10px 14px 8px;color:var(--ink-lo);font-family:var(--mono);
+  touch-action:none;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+#volhud.on{opacity:1;transform:translate(-50%,0)}
+#volhud.grab{border-color:var(--accent)}
+#volhud .vh-top{display:flex;justify-content:space-between;align-items:baseline;letter-spacing:.3em;font-size:.9em}
+#volhud .vh-num{font-size:2em;letter-spacing:.08em;color:var(--accent);line-height:1.1;transition:color .15s,transform .12s;transform-origin:right center}
+#volhud.grab .vh-num{color:var(--ink-hi);transform:scale(1.06)}
+#volhud.mute .vh-num{color:var(--ink-faint)}
+#vhtrack{display:flex;gap:2px;height:34px;margin:8px 0 6px;padding:5px;border:1px solid var(--line);cursor:pointer;outline:none;touch-action:none}
+#vhtrack:focus-visible{border-color:var(--accent-dim)}
+#vhtrack i{flex:1;min-width:0;background:#101317;transition:background-color .07s,box-shadow .07s}
+#vhtrack i.on{background:var(--c)}
+#vhtrack i.tip{background:#c5c5c5;box-shadow:0 0 9px rgba(197,197,197,.55)}
+#volhud.grab #vhtrack i.tip{background:#dfe5ee;box-shadow:0 0 14px rgba(220,228,240,.75)}
+#volhud .vh-bot{display:flex;justify-content:space-between;align-items:center;font-size:.85em}
+#volhud .vh-bot button{min-width:3.2em;font-size:1.25em;padding:0 12px;line-height:1.5;touch-action:none}
+#statusbar #sbvol{grid-area:vol;justify-self:end}
+@media (prefers-reduced-motion:reduce){#volhud,#vhtrack i,#volhud .vh-num{transition:none}}
 </style>
 
 <div class="wrap" id="shell">
@@ -277,8 +298,16 @@ footer{margin:26px 0 10px;color:var(--ink-faint);font-size:.88em;line-height:1.9
     <span class="np" id="npline">■ 정지됨 — 청취방에서 채널을 고르십시오</span>
     <span id="vu" aria-hidden="true"></span>
     <button id="sbplay">재생</button>
+    <button id="sbvol" data-vol aria-haspopup="true" aria-expanded="false">음량 <span class="vn num">35</span></button>
     <span class="time num"><span id="timerleft"></span><span>이용시간 <span id="elapsed">00:00:00</span></span></span>
   </div>
+</div>
+
+<!-- 음량 막대(2026-11-13): 재생줄·세계 아래줄의 [음량] -->
+<div id="volhud" hidden role="group" aria-label="음량">
+  <div class="vh-top"><span>음량</span><span class="vh-num num" id="vhnum">035</span></div>
+  <div id="vhtrack" role="slider" tabindex="0" aria-label="음량" aria-valuemin="0" aria-valuemax="100" aria-valuenow="35"></div>
+  <div class="vh-bot"><button id="vhdn" aria-label="음량 작게">−</button><span class="faint">끌어서 맞춥니다</span><button id="vhup" aria-label="음량 크게">+</button></div>
 </div>
 
 <!-- 겹창 -->
@@ -484,8 +513,8 @@ function armWatcher(){if(NAV.exiting||NAV.cw||typeof CloseWatcher!=="function")r
 function armBack(){if(NAV.exiting)return;armWatcher();if(NAV.depth<8){try{history.pushState({sb:1},"");NAV.depth++}catch(e){}}}
 ["pointerup","keydown"].forEach(t=>addEventListener(t,armBack,true));
 armWatcher();
-function editorOpen(){return $("#sheet").classList.contains("on")}
-function closeOverlays(){closeSheet()}
+function editorOpen(){return $("#sheet").classList.contains("on")||!!document.querySelector("#volhud.on")}
+function closeOverlays(){closeSheet();vhClose()}
 function askExit(){openSheet('<h3>나가시겠습니까?</h3><p class="note">소리는 멈춥니다. 내일 밤에도 회선은 열려 있습니다.</p><div class="acts"><button id="exityes">예, 나갑니다</button><button class="pri" id="sheetclose">아니오, 더 있을게요</button></div>');$("#sheetclose").addEventListener("click",closeSheet);
   $("#exityes").addEventListener("click",()=>{closeSheet();stopAll();NAV.exiting=true;if(NAV.cw){try{NAV.cw.destroy()}catch(e){}NAV.cw=null}const d=NAV.depth;try{history.go(-d-1)}catch(e){}
     /* 앞 페이지가 없어 못 나간 경우: 완충 항목만 걷어 첫 항목에 세워 두면 다음 뒤로가기가 곧장 나간다 */
@@ -704,6 +733,64 @@ function openShare(){
   on("sh-th",()=>shareOpen("https://www.threads.com/intent/post?text="+encodeURIComponent(sharePost())+"&url="+encodeURIComponent(SHARE.url)));
   shareReady()}
 document.addEventListener("click",e=>{const s=e.target.closest("[data-share]");if(s&&!s.disabled)openShare()});
+
+/* ============ 음량 막대 (2026-11-13 사용자 요청: "하단 재생바에 음량 조절 — 쾌감이 느껴지는 UI", 디럭스는 세계 안에서도) ============
+   아래 재생줄(디럭스는 세계 아래줄에도)의 [음량 35] → 바로 위로 32칸 LED 막대가 올라온다. 손가락을 따라 칸이 켜지고,
+   끝 칸은 ATDT 커서처럼 하얗게 빛난다. 숫자는 세 자리(035). 소리는 원래 음량 손잡이(#vol)와 같은 길로 — 주 음량만
+   0.05초로 부드럽게 바뀌고, 소리 길(직통·다리)은 건드리지 않는다. 안드로이드는 칸을 넘을 때 아주 짧은 진동(3ms, 25ms에 한 번까지).
+   3.5초 손대지 않으면 내려가고, 바깥을 누르거나 뒤로가기·ESC로 닫힌다(바깥을 누른 한 번은 닫기만 — 모래에 글이 써지지 않게). 번쩍임 없음 */
+const VH={on:false,drag:false,t:0,seg:-1,buzz:0,rep:0,repT:0,eat:0,anchor:null,N:32};
+const VH_CALM=!!(window.matchMedia&&matchMedia("(prefers-reduced-motion: reduce)").matches);
+function vhVal(){const v=+ls.get("vol",35);return isFinite(v)?Math.max(0,Math.min(100,Math.round(v))):35}
+function vhLit(v){return Math.round(v/100*VH.N)}
+function vhSegs(k){const s=$("#vhtrack").children;for(let i=0;i<s.length;i++)s[i].className=i<k?(i===k-1?"on tip":"on"):""}
+function vhPaint(v){
+  $$("[data-vol] .vn").forEach(n=>{n.textContent=v});
+  const tr=$("#vhtrack");if(!tr)return;
+  $("#vhnum").textContent=String(v).padStart(3,"0");vhSegs(vhLit(v));
+  tr.setAttribute("aria-valuenow",v);tr.setAttribute("aria-valuetext","음량 "+v);$("#volhud").classList.toggle("mute",v===0)}
+function vhSet(v){v=Math.max(0,Math.min(100,Math.round(v)));if(v!==+volEl.value){volEl.value=v;volEl.dispatchEvent(new Event("input"))}const v2=$("#vol2");if(v2)v2.value=v;vhPaint(v)}
+/* 칸을 넘는 순간 아주 짧은 진동(되는 기기만) */
+function vhTick(v){const k=vhLit(v);if(k===VH.seg)return;const now=performance.now();
+  if(VH.seg>=0&&typeof navigator.vibrate==="function"&&now-VH.buzz>25){try{navigator.vibrate(3)}catch(e){}VH.buzz=now}VH.seg=k}
+function vhFromX(x){const r=$("#vhtrack").getBoundingClientRect();return (x-r.left-5)/Math.max(1,r.width-10)*100}
+/* 누른 단추가 있는 줄 안으로 옮겨 그 줄 바로 위에 붙인다(재생줄이든 세계 아래줄이든) — 줄 높이가 바뀌어도(초원 안내 글 등) 따라 움직인다 */
+function vhPlace(){const hud=$("#volhud"),a=VH.anchor,bar=a&&(a.closest(".wbot")||a.closest("#statusbar"));if(bar&&hud.parentNode!==bar)bar.appendChild(hud)}
+function vhKeep(){clearTimeout(VH.t);VH.t=setTimeout(()=>{if(!VH.drag&&!VH.rep)vhClose()},3500)}
+function vhOpen(anchor){const hud=$("#volhud");VH.anchor=anchor;vhPlace();vhPaint(vhVal());hud.hidden=false;void hud.offsetWidth;hud.classList.add("on");VH.on=true;
+  $$("[data-vol]").forEach(b=>b.setAttribute("aria-expanded","true"));vhKeep();
+  if(VH_CALM)return;/* 열릴 때 칸이 0에서 지금 값까지 한 번 훑고 올라간다(0.2초) */
+  const k=vhLit(vhVal()),t0=performance.now();vhSegs(0);
+  const step=now=>{if(!VH.on||VH.drag)return;const p=Math.min(1,(now-t0)/200);vhSegs(Math.round(k*(1-Math.pow(1-p,3))));if(p<1)requestAnimationFrame(step)};requestAnimationFrame(step);
+  /* 화면 그리기가 느린 기기(저전력 등)에서도 0.26초 뒤엔 반드시 제 칸까지 켜져 있게 */
+  setTimeout(()=>{if(VH.on&&!VH.drag)vhPaint(vhVal())},260)}
+function vhClose(){const hud=$("#volhud");if(!hud||!VH.on)return;VH.on=false;VH.drag=false;clearTimeout(VH.t);clearTimeout(VH.repT);clearInterval(VH.rep);VH.rep=0;
+  hud.classList.remove("on","grab");$$("[data-vol]").forEach(b=>b.setAttribute("aria-expanded","false"));setTimeout(()=>{if(!VH.on)hud.hidden=true},200)}
+(()=>{
+  const tr=$("#vhtrack");
+  for(let i=0;i<VH.N;i++){const s=document.createElement("i"),p=i/(VH.N-1);
+    /* 왼쪽은 어두운 남색, 오른쪽으로 갈수록 밝은 청회색 — 크게 할수록 막대가 밝아진다 */
+    s.style.setProperty("--c","rgb("+Math.round(58+p*(150-58))+","+Math.round(70+p*(168-70))+","+Math.round(82+p*(192-82))+")");tr.append(s)}
+  tr.addEventListener("pointerdown",e=>{if(e.button>0)return;e.preventDefault();VH.drag=true;$("#volhud").classList.add("grab");try{tr.setPointerCapture(e.pointerId)}catch(_){}
+    VH.seg=vhLit(vhVal());const v=vhFromX(e.clientX);vhSet(v);vhTick(v);vhKeep()});
+  tr.addEventListener("pointermove",e=>{if(!VH.drag)return;const v=vhFromX(e.clientX);vhSet(v);vhTick(v)});
+  const end=()=>{if(!VH.drag)return;VH.drag=false;$("#volhud").classList.remove("grab");vhKeep()};
+  ["pointerup","pointercancel","lostpointercapture"].forEach(t=>tr.addEventListener(t,end));
+  tr.addEventListener("keydown",e=>{const d={ArrowLeft:-1,ArrowDown:-1,ArrowRight:1,ArrowUp:1,PageDown:-10,PageUp:10}[e.key];
+    let v=null;if(d)v=vhVal()+d;else if(e.key==="Home")v=0;else if(e.key==="End")v=100;if(v===null)return;e.preventDefault();e.stopPropagation();vhSet(v);vhKeep()});
+  /* −/+ : 누르면 한 칸, 꾹 누르면 0.38초 뒤부터 계속 */
+  [["vhdn",-1],["vhup",1]].forEach(([id,d])=>{const b=$("#"+id),go=()=>{const v=vhVal()+d;vhSet(v);vhTick(v)};
+    const stop=()=>{clearTimeout(VH.repT);if(VH.rep){clearInterval(VH.rep);VH.rep=0}vhKeep()};
+    b.addEventListener("pointerdown",e=>{if(e.button>0)return;e.preventDefault();VH.seg=vhLit(vhVal());go();clearTimeout(VH.repT);VH.repT=setTimeout(()=>{VH.rep=setInterval(go,55)},380);vhKeep()});
+    ["pointerup","pointerleave","pointercancel"].forEach(t=>b.addEventListener(t,stop));
+    b.addEventListener("click",e=>{if(e.detail===0){vhSet(vhVal()+d);vhKeep()}})});
+  volEl.addEventListener("input",()=>vhPaint(+volEl.value));
+  document.addEventListener("click",e=>{const b=e.target.closest("[data-vol]");if(!b)return;if(VH.on)vhClose();else vhOpen(b)});
+  /* 열려 있을 때 바깥을 누르면 닫기만 한다(그 한 번은 아래로 넘기지 않음) */
+  document.addEventListener("pointerdown",e=>{if(!VH.on||e.target.closest("#volhud,[data-vol]"))return;vhClose();VH.eat=performance.now();e.stopPropagation();e.preventDefault()},true);
+  document.addEventListener("click",e=>{if(VH.eat&&performance.now()-VH.eat<700){VH.eat=0;e.stopPropagation();e.preventDefault()}},true);
+  vhPaint(vhVal());
+})();
 
 /* ============ 시작 ============ */
 /* 앱 아이콘으로 열었을 때: 안드로이드 시작 화면과 똑같은 로고 — 켜진 커서가 다섯 번 보이고(일, 이, 삼, 사, 오) 다시 꺼지기 직전에 스르르 첫 화면으로(누르면 바로 넘어감) */
