@@ -25,7 +25,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="맞춤법 통신">
+<meta name="apple-mobile-web-app-title" content="The 맞춤법 통신">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
 </head>
@@ -1205,7 +1205,7 @@ var Card = (function () {
   var AC = null, master = null, noise = null;
   function audio() {
     if (!S.snd) return null;
-    if (!AC && navigator.userActivation && !navigator.userActivation.hasBeenActive) return null;   // 누르기 전에는 브라우저가 소리를 막는다
+    if (!AC && !TAPPED && !installed() && navigator.userActivation && !navigator.userActivation.hasBeenActive) return null;   // 누르기 전에는 브라우저가 소리를 막는다(앱으로 열었으면 만들어 본다 — 2026-11-14)
     try {
       if (!AC) {
         var A = window.AudioContext || window.webkitAudioContext; if (!A) return null;
@@ -1875,6 +1875,38 @@ var Card = (function () {
     setTimeout(function () { if (me.el.parentNode) me.el.parentNode.removeChild(me.el); }, 260);
   }
 
+  /* ---------- 접속 대기 화면(2026-11-14) ----------
+     아이폰은 화면을 한 번 누르기 전에는 홈 화면에 깐 앱이라도 소리를 막는다. 그래서 앱으로 열었는데 소리가 막혀 있으면
+     접속 대기 화면으로 기다렸다가, 누르는 그 손짓 안에서 소리 장치를 켜고 여는 화면(접속 → 간판 → 동그라미)을 튼다.
+     소리가 바로 되는 곳(안드로이드에 깐 앱 등)은 기다리지 않는다. 브라우저로 연 첫 화면은 예전처럼(막혀 있으면 조용히). */
+  var TAPPED = false;
+  function bootOpen() {
+    var ua = navigator.userActivation;
+    if (!installed() || !S.snd || (ua && ua.hasBeenActive)) return boot();
+    if (/^ios/.test(platform())) return bootGate();          // 아이폰은 누르기 전엔 늘 막힌다 — 소리 장치를 미리 만들지 않는다
+    audio();
+    var t0 = performance.now();
+    (function wait() {                                       // 안드로이드에 깐 앱처럼 바로 켜지는 곳은 그대로 튼다
+      if (AC && AC.state === 'running') return boot();
+      if (performance.now() - t0 < 300) return setTimeout(wait, 30);
+      bootGate();
+    })();
+  }
+  function bootGate() {
+    var el = document.createElement('div'); el.id = 'boot';
+    el.innerHTML = '<div class="l">맞춤맞춤법 통신 ' + CONFIG.version + '</div><div class="l" style="margin-top:14px"><span class="ye">' + (TOUCH ? '화면을 누르면' : '아무 키나 누르면') + ' 접속합니다</span> <span class="cur"></span></div>';
+    scr.appendChild(el);
+    function on(ev) {
+      if (ev.type === 'keydown' && (ev.metaKey || ev.ctrlKey || ev.altKey)) return;
+      ev.preventDefault(); ev.stopPropagation();
+      document.removeEventListener('click', on, true); document.removeEventListener('keydown', on, true);
+      TAPPED = true; audio();                                // 누른 손짓 안에서 켠다(아이폰은 이때만 허락)
+      if (el.parentNode) el.parentNode.removeChild(el);
+      boot();
+    }
+    document.addEventListener('click', on, true); document.addEventListener('keydown', on, true);
+  }
+
   /* ---------- 시작 ---------- */
   if ('serviceWorker' in navigator && onSite()) {
     try { navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(function () { /* 오프라인 실행만 빠진다 */ }); } catch (e) { /* 위와 같음 */ }
@@ -1882,7 +1914,7 @@ var Card = (function () {
   fit(); window.addEventListener('resize', fit);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit);
   if (S.cur && S.cur.key === tKey() && S.cur.res.length > 0 && !S.days[tKey()]) startDaily();   // 하던 훈련은 바로 이어 간다
-  else { render(); if (!window.__mmNoSplash) boot(); }
+  else { render(); if (!window.__mmNoSplash) bootOpen(); }
   window.__pc = { state: function () { return S; }, ses: function () { return ses; }, go: go, run: run, booting: function () { return !!BOOT; }, shiftDays: function (n) { shift = n * 86400000; }, view: function () { return V.name; } };
 })();
 
