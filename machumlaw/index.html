@@ -8,15 +8,24 @@
 <meta property="og:title" content="The 맞춤 맞춤법 게임">
 <meta property="og:description" content="하루 다섯 문제, 틀린 말은 1·3·7·21일 뒤에 다시. 가입 없는 맞춤법 게임.">
 <meta property="og:url" content="https://yangjinhyeok22.github.io/machumlaw/">
-<meta name="twitter:card" content="summary">
-<meta property="og:image" content="https://yangjinhyeok22.github.io/machumlaw/icon-512.png">
+<link rel="canonical" href="https://yangjinhyeok22.github.io/machumlaw/">
+<meta property="og:image" content="https://yangjinhyeok22.github.io/machumlaw/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="두 화면 게임기에서 맞춤법 문제를 풀고 빨간 색연필로 동그라미 친 화면">
+<meta property="og:site_name" content="The 맞춤 맞춤법 게임">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The 맞춤 맞춤법 게임">
+<meta name="twitter:description" content="하루 다섯 문제, 틀린 말은 1·3·7·21일 뒤에 다시. 가입 없는 맞춤법 게임.">
+<meta name="twitter:image" content="https://yangjinhyeok22.github.io/machumlaw/og.png">
+<script type="application/ld+json">{"@context": "https://schema.org", "@type": "WebApplication", "name": "The 맞춤 맞춤법 게임", "url": "https://yangjinhyeok22.github.io/machumlaw/", "description": "하루 다섯 문제, 틀린 말은 1·3·7·21일 뒤에 다시. 가입 없는 맞춤법 게임.", "inLanguage": "ko", "applicationCategory": "GameApplication", "operatingSystem": "Web", "isAccessibleForFree": true, "offers": {"@type": "Offer", "price": "0", "priceCurrency": "KRW"}, "author": {"@type": "Person", "name": "양진혁", "url": "https://www.threads.com/@yangjinhyuk.yt"}}</script>
 <meta name="theme-color" content="#131923">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="맞춤법 게임">
+<meta name="apple-mobile-web-app-title" content="The 맞춤법 게임">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>:root{padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
 </head>
@@ -239,13 +248,23 @@ button.li:active,a.li:active{background:#fff0a8}
   .wc.q.ask.mid{animation:none}
 }
 
+/* 스크립트가 뜨기 전(또는 검색 로봇)에 보이는 소개 */
+.ly .seo{position:absolute;inset:0;padding:8px 10px;overflow:auto;font-size:12px;line-height:1.45;color:#1c2333}
+.ly .seo h1{font-size:18px;line-height:1.2;margin:4px 0 6px;color:#d6352a;font-weight:normal}
+.ly .seo p,.ly .seo ul{margin:0 0 6px}
+.ly .seo ul{padding-left:16px}
+.ly .seo a{color:#1b2a9e}
+
+/* 꺼진 화면(2026-11-14): 앱으로 열었는데 소리가 막혀 있으면 누를 때까지 기다린다 */
+#lcd1 .sp.off,#lcd2 .sp.off{background:#1d2129}
+.sp.off .spl{gap:6px;color:#8b93a3}
 </style>
 <div id="desk">
   <div class="dev" id="dev">
     <div class="sh st">
       <div class="bz"><div class="lw" id="w1">
         <div class="lcd" id="lcd1">
-          <div class="ly" id="t"></div>
+          <div class="ly" id="t"><div class="seo"><h1>The 맞춤 맞춤법 게임</h1><p>하루 다섯 문제로 하는 맞춤법 훈련. 맞는 말을 고르면 빨간 색연필이 동그라미를 칩니다.</p></div></div>
           <canvas id="ink" width="768" height="576" aria-hidden="true"></canvas>
           <div id="pen" hidden><svg viewBox="0 0 52 10" shape-rendering="crispEdges" aria-hidden="true">
             <polygon points="0,5 8,2 8,8" fill="#e8cba0"/><polygon points="0,5 3.4,3.7 3.4,6.3" fill="#b3241b"/>
@@ -260,7 +279,7 @@ button.li:active,a.li:active{background:#fff0a8}
     <div class="hg"><i></i><span>The 맞춤 맞춤법 게임</span><i></i></div>
     <div class="sh sb">
       <div class="bz"><div class="lw lo" id="w2">
-        <div class="lcd" id="lcd2"><div class="ly" id="b"></div></div>
+        <div class="lcd" id="lcd2"><div class="ly" id="b"><div class="seo"><ul><li>틀린 말은 1·3·7·21일 뒤에 다시 나옵니다(간격 반복).</li><li>결과는 ○× 한 줄과 결과 그림으로 스레드·X·카톡에 자랑합니다.</li><li>가입 없음. 기록은 이 기기에만 남습니다.</li></ul><p><a href="https://www.threads.com/@yangjinhyuk.yt" target="_blank" rel="noopener">의견 보내기(스레드)</a></p></div></div></div>
         <div class="glass"></div>
       </div></div>
       <div class="ct">
@@ -919,7 +938,7 @@ var CONFIG = {
   tag: '맞춤맞춤법게임',          // 공유 문구 해시태그(스레드는 주제 태그)
   appUrl: 'https://yangjinhyeok22.github.io/machumlaw/',                     // 공개 주소. 넣으면 공유 문구 맨 아래에 붙는다.
   dayOne: '2026-11-11',           // 제1회 날짜(한국 시간)
-  version: 'v0.5',
+  version: 'v0.6',
   boxDays: [0, 1, 3, 7, 21],      // 오답 상자 칸별 복습 간격(일). 21일까지 맞히면 졸업.
   reviewCap: 8,                   // 하루 훈련에 끼워 넣는 복습 문제 최대 개수
   support: { opensOn: '2027-02-11', links: [] }  // links: [{name:'토스', url:'https://…'}]. 비어 있으면 날짜가 돼도 안 뜬다.
@@ -1171,6 +1190,70 @@ if (typeof module !== 'undefined') module.exports = {
 };
 
 /* ===================================================================
+   결과 그림과 휴대폰 공유창 (네 앱이 같이 쓴다)
+   - drawCard(o): 1080×1080 결과 그림을 그려 Promise<Blob>을 돌려준다
+     o = { bg, fg, accent, sub, title, kicker, big, small, marks, lines[], stamp:[a,b], url, font }
+   - shareSheet({ title, text, url, card }): 휴대폰 공유창으로 그림+글+주소를 보낸다.
+     그림을 못 보내면 글만, 공유창이 없으면 false를 돌려준다(그때는 복사로 넘어간다).
+   =================================================================== */
+var Card = (function () {
+  'use strict';
+  function inApp() { return /KAKAOTALK|Instagram|FBAN|FBAV|Line\/|NAVER\(inapp|everytimeApp|DaumApps/i.test(navigator.userAgent || ''); }
+  function ring(g, cx, cy, rx, ry, lw, color) {
+    var pts = [], T0 = Math.PI * 0.56, SW = Math.PI * 2.04, tilt = -0.1, i, th, s = 7;
+    function rnd() { s = (s * 16807) % 2147483647; return s / 2147483647; }
+    function add(th, k) { var x = Math.cos(th) * rx * k, y = Math.sin(th) * ry * k; pts.push([cx + x * Math.cos(tilt) - y * Math.sin(tilt), cy + x * Math.sin(tilt) + y * Math.cos(tilt)]); }
+    for (i = 0; i <= 80; i++) { var t = i / 80; th = T0 + SW * t; add(th, (0.9 + 0.1 * Math.min(1, t * 4)) * (1 + 0.035 * Math.sin(th * 2.1 + 1) + 0.02 * Math.sin(th * 3.7 + 2))); }
+    th = T0 + SW; for (i = 1; i <= 6; i++) { th += 0.08; add(th, 1 + 0.02 * i + 0.003 * i * i); }
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    for (var k = 0; k < 3; k++) { g.beginPath(); g.moveTo(pts[0][0], pts[0][1]); for (i = 1; i < pts.length; i++) g.lineTo(pts[i][0] + (rnd() - 0.5) * lw * 0.15, pts[i][1] + (rnd() - 0.5) * lw * 0.15); g.lineWidth = lw * (0.75 + k * 0.18); g.strokeStyle = color || 'rgba(214,48,40,' + (0.6 + k * 0.13) + ')'; g.stroke(); }
+  }
+  function fit(g, text, max, size, font) { var s = size; g.font = s + 'px ' + font; while (s > 18 && g.measureText(text).width > max) { s -= 2; g.font = s + 'px ' + font; } return s; }
+  function drawCard(o) {
+    var W = 1080, c = document.createElement('canvas'); c.width = W; c.height = W;
+    var g = c.getContext('2d'), F = o.font || '"NeoDunggeunmo", monospace', pad = 80;
+    var ready = document.fonts && document.fonts.load ? document.fonts.load('40px ' + F).catch(function () { /* 그대로 그린다 */ }) : Promise.resolve();
+    return ready.then(function () {
+      g.fillStyle = o.bg; g.fillRect(0, 0, W, W);
+      g.fillStyle = o.band || o.accent; g.fillRect(0, 0, W, 120);
+      g.fillStyle = o.bandFg || '#fff'; g.textBaseline = 'middle'; g.textAlign = 'left';
+      fit(g, o.title, W - pad * 2, 52, F); g.fillText(o.title, pad, 62);
+      g.fillStyle = o.dim || o.fg; g.globalAlpha = 0.8; fit(g, o.kicker || '', W - pad * 2, 40, F); g.fillText(o.kicker || '', pad, 190); g.globalAlpha = 1;
+      var bx = pad + 40; g.fillStyle = o.fg; var bs = fit(g, o.big, 600, 150, F); g.fillText(o.big, bx, 330);
+      var bw = g.measureText(o.big).width;
+      ring(g, bx + bw / 2, 330, bw / 2 + 44, bs * 0.6, 18);
+      if (o.small) { g.fillStyle = o.dim || o.fg; fit(g, o.small, W - pad * 2 - 320, 44, F); g.fillText(o.small, pad, 450); }
+      if (o.marks) { g.fillStyle = o.accent; fit(g, o.marks, W - pad * 2, 96, F); g.fillText(o.marks, pad, 560); }
+      var y = 660; g.fillStyle = o.fg;
+      (o.lines || []).slice(0, 4).forEach(function (l) { fit(g, l, W - pad * 2, 40, F); g.fillText(l, pad, y); y += 58; });
+      if (o.stamp) {
+        var sx = W - pad - 130, sy = 360; g.save(); g.translate(sx, sy); g.rotate(-0.2);
+        g.strokeStyle = '#d6352a'; g.lineWidth = 10; g.beginPath(); g.arc(0, 0, 120, 0, Math.PI * 2); g.stroke(); g.lineWidth = 4; g.beginPath(); g.arc(0, 0, 100, 0, Math.PI * 2); g.stroke();
+        g.fillStyle = '#d6352a'; g.textAlign = 'center'; fit(g, o.stamp[0], 170, 56, F); g.fillText(o.stamp[0], 0, o.stamp[1] ? -28 : 0); if (o.stamp[1]) { fit(g, o.stamp[1], 170, 56, F); g.fillText(o.stamp[1], 0, 36); }
+        g.restore(); g.textAlign = 'left';
+      }
+      g.fillStyle = o.foot || o.accent; g.fillRect(0, W - 110, W, 110);
+      g.fillStyle = o.footFg || '#fff'; fit(g, o.url.replace('https://', ''), W - pad * 2, 40, F); g.fillText(o.url.replace('https://', ''), pad, W - 55);
+      return new Promise(function (done) { c.toBlob(function (b) { done(b); }, 'image/png'); });
+    });
+  }
+  // 휴대폰 공유창: 그림+글 → 글만 → 못 함(false)
+  function shareSheet(o) {
+    if (!navigator.share || inApp()) return Promise.resolve(false);
+    var base = { title: o.title, text: o.text }; if (o.url && String(o.text).indexOf(o.url) < 0) base.url = o.url;
+    function plain() { return navigator.share(base).then(function () { return true; }, function (e) { return e && e.name === 'AbortError' ? true : false; }); }
+    if (!o.card || !navigator.canShare || typeof File === 'undefined') return plain();
+    return o.card().then(function (blob) {
+      if (!blob) return plain();
+      var f = new File([blob], (o.fileName || 'result') + '.png', { type: 'image/png' }), withFile = { title: o.title, text: o.text + (o.url && o.text.indexOf(o.url) < 0 ? '\n' + o.url : ''), files: [f] };
+      if (!navigator.canShare(withFile)) return plain();
+      return navigator.share(withFile).then(function () { return true; }, function (e) { return e && e.name === 'AbortError' ? true : plain(); });
+    }, plain);
+  }
+  return { drawCard: drawCard, shareSheet: shareSheet, inApp: inApp };
+})();
+
+/* ===================================================================
    화면 — 두 화면 게임기, 색연필 채점, 소리
    =================================================================== */
 (function () {
@@ -1395,7 +1478,7 @@ if (typeof module !== 'undefined') module.exports = {
       var h = '<button type="button" class="btn big redb" data-main="1" data-a="' + main[0] + '" style="left:10px;top:8px;width:236px;height:56px"><b>' + main[1] + '</b><i>' + main[2] + '</i></button>' +
         btn('box', '오답 상자' + (due ? '<em>' + due + '</em>' : ''), 10, 74, 114, 34) + btn('find', '맞춤법 찾기', 132, 74, 114, 34) +
         btn('endless', '끝까지 도전', 10, 118, 114, 34) + btn('cal', '도장 달력', 132, 118, 114, 34);
-      h += btn('lab', '정말 늘까요? ▶', 2, 162, 132, 24, 'ghost') + btn('app', supportOpen() ? '앱·후원 ▶' : '앱 설치 ▶', 134, 162, 120, 24, 'ghost');
+      h += btn('lab', '정말 늘까?', 2, 162, 84, 24, 'ghost') + btn('tell', '알리기 ▶', 86, 162, 84, 24, 'ghost') + btn('app', supportOpen() ? '앱·후원 ▶' : '앱 설치 ▶', 170, 162, 84, 24, 'ghost');
       return h;
     },
     after: function () {
@@ -1555,8 +1638,32 @@ if (typeof module !== 'undefined') module.exports = {
   function stampHTML(text, anim) { var p = STAMP[text] || [text, '']; return '<div class="stamp"' + (anim ? '' : ' style="animation:none"') + '><span>' + p[0] + '</span><span>' + p[1] + '</span></div>'; }
   function shareBlock(text, y) {
     var L = shareLinks(text);
-    return lnk(L.x, 'X에 자랑하기', 10, y, 236, 36, 'redb') + lnk(L.threads, '스레드', 10, y + 46, 114, 30) + lnk(L.bsky, '블루스카이', 132, y + 46, 114, 30) +
+    return btn('sheet', '자랑하기 · 그림과 함께 ▶', 10, y, 236, 36, 'redb', 'data-main="1"') + lnk(L.x, 'X', 10, y + 46, 114, 30) + lnk(L.threads, '스레드', 132, y + 46, 114, 30) +
       lnk(L.band, '밴드', 10, y + 86, 114, 30) + btn('copy', '문구 복사', 132, y + 86, 114, 30);
+  }
+  /* 결과 그림: 결과 화면이 뜰 때 미리 그려 둔다(누르는 순간 바로 공유창이 열리게) */
+  var cardP = null, FEEDBACK = 'https://www.threads.com/@yangjinhyuk.yt';
+  function cardData() {
+    var stamp = function (t) { return STAMP[t] || [t, '']; };
+    if (V.kind === 'endless') { var n = last ? last.score : 0; return { title: CONFIG.name, kicker: '끝까지 도전 · 틀릴 때까지', big: n + '문제', small: '최고 기록 ' + S.best + '문제 · ' + rankOf(S.xp).name, lines: ['한 번 틀리면 끝나는 연속 정답 도전'], stamp: null }; }
+    var rec = S.days[tKey()]; if (!rec) return null;
+    var sc = rec.res.filter(Boolean).length, d = dateOfIdx(tIdx());
+    var pairs = shareText(rec, 1).split('\n').filter(function (l) { return /\(.\) \//.test(l); });
+    return { title: CONFIG.name, kicker: '제' + rec.no + '회 · ' + d.m + '월 ' + d.d + '일 · 맵기 ' + '●'.repeat(rec.sp) + '○'.repeat(3 - rec.sp), big: sc + '/5', small: (rec.ms / 1000).toFixed(1) + '초 · 연속 ' + streakOf(S, tIdx()) + '일',
+      marks: rec.res.map(function (r) { return r ? '○' : '×'; }).join(' '), lines: pairs, stamp: stamp(stampOf(sc)) };
+  }
+  function prepareCard() {
+    var d = cardData(); cardP = null; if (!d || typeof Card === 'undefined') return;
+    cardP = Card.drawCard(Object.assign({ bg: '#f6f1df', fg: '#1c2333', dim: '#4d5466', accent: '#d6352a', band: '#131923', foot: '#131923', url: HOME_URL }, d));
+  }
+  function shareSheetNow() {
+    var text = shareNow(); if (!text) return;
+    Card.shareSheet({ title: CONFIG.name, text: text, url: HOME_URL, card: cardP ? function () { return cardP; } : null, fileName: 'matchum-' + tKey() })
+      .then(function (ok) { if (!ok) copyText(text); });
+  }
+  function tellFriend() {
+    var text = 'The 맞춤 맞춤법 게임 · 하루 다섯 문제로 맞춤법 훈련. 틀린 말은 1·3·7·21일 뒤에 다시 나와요. 가입 없음.';
+    Card.shareSheet({ title: CONFIG.name, text: text, url: HOME_URL }).then(function (ok) { if (!ok) copyText(text + '\n' + HOME_URL); });
   }
   function nextDue() {
     var t = tIdx(), min = 0, n = 0;
@@ -1594,6 +1701,7 @@ if (typeof module !== 'undefined') module.exports = {
       return btn('home', '처음으로', 10, 8, 236, 40, 'redb', 'data-main="1"') + btn('box', '오답 상자 보기', 10, 60, 236, 34);
     },
     after: function () {
+      prepareCard();
       if (last && last.fresh) { last.fresh = false; if (V.kind === 'daily') setTimeout(function () { Snd.thump(); }, 60); }
     }
   };
@@ -1792,7 +1900,8 @@ if (typeof module !== 'undefined') module.exports = {
       var t = V.tab || 'menu', h = '';
       if (t === 'menu') {
         h = btn('appi', '앱으로 설치', 10, 8, 236, 36, 'redb', 'data-main="1"') + btn('apph', '브라우저 첫 페이지로', 10, 54, 236, 34);
-        var i = 0; if (supportOpen()) (CONFIG.support.links || []).slice(0, 1).forEach(function (l) { h += lnk(l.url, '후원하기 ▶', 10, 98, 236, 30); i++; });
+        var i = 0; if (supportOpen()) (CONFIG.support.links || []).slice(0, 1).forEach(function (l) { h += lnk(l.url, '후원하기 ▶', 10, 98, 236, 26); i++; });
+        h += lnk(FEEDBACK, '의견 보내기 (스레드) ▶', 10, i ? 128 : 98, 236, i ? 24 : 30);
         return h + btn('home', '처음으로', 10, 156, 236, 28);
       }
       if (t === 'install') {
@@ -1821,7 +1930,7 @@ if (typeof module !== 'undefined') module.exports = {
     home: function () { if (ses) clearTimeout(ses.to); ses = null; go('home'); },
     ans: function (d) { answer(+d.i); }, next: nextQ,
     look: function () { go('look', { i: 0 }); }, looki: function (d) { go('look', { i: +d.i }); },
-    copy: function () { copyText(shareNow()); }, back: function () { render(); }, out: function () { },
+    copy: function () { copyText(shareNow()); }, sheet: function () { shareSheetNow(); }, tell: function () { tellFriend(); }, back: function () { render(); }, out: function () { },
     fsel: function (d) { V.sel = +d.i; drawFind(); },
     fex: function (d) { var q = $('fq'); q.value = d.q; V.res = lookup(d.q); V.sel = 0; drawFind(); },
     fadd: function (d) { if (addFromFind(S, d.e, tIdx())) { save(); toast('내일 다시 묻습니다'); } drawFind(); }
@@ -1902,7 +2011,7 @@ if (typeof module !== 'undefined') module.exports = {
     // 소리는 브라우저가 허락할 때만 낸다. 한 번이라도 누른 뒤나 홈 화면에 설치한 앱처럼 허락된 곳에서는 바로 나고, 아니면 조용히 지나간다.
     if (S.snd && !AC) audio();
     if (AC && AC.state === 'suspended') { try { AC.resume(); } catch (e) { /* 허락이 없으면 그대로 */ } }
-    me.loud = !!(S.snd && AC && (AC.state === 'running' || (navigator.userActivation && navigator.userActivation.hasBeenActive)));
+    me.loud = !!(S.snd && AC && (AC.state === 'running' || TAPPED || (navigator.userActivation && navigator.userActivation.hasBeenActive)));
     me.layers = [lcd1, $('lcd2')].map(function (lcd, i) {
       var d = document.createElement('div'); d.className = 'sp' + (REDUCE ? ' on' : '');
       d.innerHTML = '<div class="spl">' + (i ? '<span class="s2" id="spw1">맞춤법</span><span class="s2 r" id="spw2">게임!</span>' : '<span class="s1" id="spw0">맞춤!</span>') + '</div>' +
@@ -1939,6 +2048,41 @@ if (typeof module !== 'undefined') module.exports = {
     setTimeout(function () { me.layers.forEach(function (L) { if (L.el.parentNode) L.el.parentNode.removeChild(L.el); }); }, 320);
   }
 
+  /* ---------- 꺼진 화면(2026-11-14) ----------
+     아이폰은 화면을 한 번 누르기 전에는 홈 화면에 깐 앱이라도 소리를 막는다. 그래서 앱으로 열었는데 소리가 막혀 있으면
+     꺼진 화면으로 기다렸다가, 누르는 그 손짓 안에서 소리 장치를 켜고 여는 화면(탁 · 지지직 · 로고)을 튼다.
+     소리가 바로 되는 곳(안드로이드에 깐 앱 등)은 기다리지 않는다. 브라우저로 연 첫 화면은 예전처럼(막혀 있으면 조용히). */
+  var TAPPED = false;
+  function opening() {
+    var ua = navigator.userActivation;
+    if (!installed() || !S.snd || (ua && ua.hasBeenActive)) return splash(render);
+    if (/^ios/.test(platform())) return powerOff();          // 아이폰은 누르기 전엔 늘 막힌다 — 소리 장치를 미리 만들지 않는다
+    audio();
+    var t0 = performance.now();
+    (function wait() {                                       // 안드로이드에 깐 앱처럼 바로 켜지는 곳은 그대로 튼다
+      if (AC && AC.state === 'running') return splash(render);
+      if (performance.now() - t0 < 300) return setTimeout(wait, 30);
+      powerOff();
+    })();
+  }
+  function powerOff() {
+    var touch = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);
+    var lay = [lcd1, $('lcd2')].map(function (lcd, i) {
+      var d = document.createElement('div'); d.className = 'sp off';
+      d.innerHTML = '<div class="spl">' + (i ? '<span>' + (touch ? '화면을 누르면' : '아무 키나 누르면') + '</span><span>켜집니다</span>' : '') + '</div>';
+      lcd.appendChild(d); return d;
+    });
+    function on(ev) {
+      if (ev.type === 'keydown' && (ev.metaKey || ev.ctrlKey || ev.altKey)) return;
+      ev.preventDefault(); ev.stopPropagation();
+      document.removeEventListener('click', on, true); document.removeEventListener('keydown', on, true);
+      TAPPED = true; audio();                                // 누른 손짓 안에서 켠다(아이폰은 이때만 허락)
+      lay.forEach(function (d) { if (d.parentNode) d.parentNode.removeChild(d); });
+      splash(render);
+    }
+    document.addEventListener('click', on, true); document.addEventListener('keydown', on, true);
+  }
+
   /* ---------- 시작 ---------- */
   $('kSnd').classList.toggle('off', !S.snd);
   fit(); window.addEventListener('resize', fit);
@@ -1951,7 +2095,7 @@ if (typeof module !== 'undefined') module.exports = {
   }
   if (S.cur && S.cur.key === tKey() && S.cur.res.length > 0 && !S.days[tKey()]) startDaily();
   else if (window.__mmNoSplash) render();
-  else splash(render);
+  else opening();
   window.__mm = { splash: function () { splash(render); }, splashing: function () { return !!SP; }, state: function () { return S; }, ses: function () { return ses; }, go: go, answer: answer, next: nextQ, shiftDays: function (n) { shift = n * 86400000; }, reset: function () { S = fresh(); save(); ses = null; last = null; go('home'); }, entries: function () { return BANK; } };
 })();
 
