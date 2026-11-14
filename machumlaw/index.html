@@ -306,9 +306,9 @@ button.li:active,a.li:active{background:#fff0a8}
    문제 은행 — 헷갈리는 표현 사전
    F(id, 난이도, 바른 말, 틀린 말, 풀이, 문장들, 덧붙임)  틀린 말이 어디서도 안 쓰이는 경우
    C(id, 난이도, [말1, 말2] 또는 이름, 풀이, 문장들, 덧붙임)  둘 다 있는 말이라 문맥으로 가리는 경우
-   L(id, 난이도, 바른 표기, 틀린 표기, 원어, 문장)  외래어
+   L(id, 난이도, 바른 표기, 틀린 표기, 원어, 문장)  외래어 — 문제로는 드물게만 낸다(아래 '오늘의 다섯 문제', '끝까지 도전')
    문장: [문장('{}'가 빈칸), 정답, 오답, 난이도(생략 가능), 공유 문구용 이름(생략 가능)]
-   덧붙임: x {틀린 꼴: 바른 꼴} 찾기에서 바로 판정 / m [[말, 뜻]] / k [찾기용 열쇠말] / nk 보기를 열쇠말로 쓰지 않음
+   덧붙임: x {틀린 꼴: 바른 꼴} 찾기에서 바로 판정 / m [[말, 뜻]] / k [찾기용 열쇠말] / nk 보기를 열쇠말로 쓰지 않음 / lw 외래어(드물게 낸다)
    난이도: 1 순한맛, 2 보통맛, 3 매운맛
    사이시옷이 들어가야 정답인 말은 넣지 않는다(규정 개정 추진 중, 2026년 1월 국립국어원 발표).
    =================================================================== */
@@ -319,14 +319,14 @@ var BANK = [];
     BANK.push({
       id: id, lv: lv, type: type, label: label, rule: rule,
       qs: qs.map(function (q) { return { s: q[0], a: q[1], b: q[2], lv: q[3] || lv, l: q[4] || null }; }),
-      x: ex.x || {}, m: ex.m || null, k: ex.k || [], nk: !!ex.nk
+      x: ex.x || {}, m: ex.m || null, k: ex.k || [], nk: !!ex.nk, lw: !!ex.lw
     });
   }
   function F(id, lv, right, wrong, rule, qs, ex) { add('F', id, lv, [right, wrong], rule, qs, ex); }
   function C(id, lv, label, rule, qs, ex) { add('C', id, lv, label, rule, qs, ex); }
   function hasBatchim(w) { var c = w.charCodeAt(w.length - 1); return c >= 0xAC00 && c <= 0xD7A3 && (c - 0xAC00) % 28 !== 0; }
   function L(id, lv, right, wrong, eng, s) {
-    add('F', id, lv, [right, wrong], '‘' + right + '’' + (hasBatchim(right) ? '이' : '가') + ' 맞습니다. (' + eng + ')', [[s, right, wrong]], {});
+    add('F', id, lv, [right, wrong], '‘' + right + '’' + (hasBatchim(right) ? '이' : '가') + ' 맞습니다. (' + eng + ')', [[s, right, wrong]], { lw: 1 });
   }
 
   /* ---------- 순한맛: 누구나 한 번은 틀리는 것 ---------- */
@@ -917,7 +917,7 @@ var BANK = [];
   L('collection', 3, '컬렉션', '콜렉션', 'collection', "봄 {}을 선보였다.");
   L('conference', 3, '콘퍼런스', '컨퍼런스', 'conference', "개발자 {}에 갔다.");
   L('front', 3, '프런트', '프론트', 'front', "호텔 {}에 맡겼다.");
-  C('staff', 3, ['스태프', '스텝'], "staff는 ‘스태프’, step은 ‘스텝’으로 적습니다.", [["촬영 {} 모집", "스태프", "스텝"]]);
+  C('staff', 3, ['스태프', '스텝'], "staff는 ‘스태프’, step은 ‘스텝’으로 적습니다.", [["촬영 {} 모집", "스태프", "스텝"]], { lw: 1 });
 })();
 
 /* 찾기에서만 안내하는 말: 사이시옷 규정이 바뀔 수 있어 판정하지 않는다 */
@@ -974,7 +974,7 @@ var ENT = {}, QS = [], QBY = {};
   BANK.forEach(function (e) {
     ENT[e.id] = e;
     e.qs.forEach(function (q, i) {
-      var item = { qid: e.id + '#' + i, eid: e.id, qi: i, lv: q.lv, s: q.s, a: q.a, b: q.b };
+      var item = { qid: e.id + '#' + i, eid: e.id, qi: i, lv: q.lv, s: q.s, a: q.a, b: q.b, lw: e.lw };
       QS.push(item); QBY[item.qid] = item;
     });
   });
@@ -984,32 +984,51 @@ function pairLabel(a, b) { return xmur3(a + '|' + b)() & 1 ? a + '/' + b : b + '
 function entryLabel(e) { return typeof e.label === 'string' ? e.label : pairLabel(e.label[0], e.label[1]); }
 function qLabel(e, qi) { var q = e.qs[qi]; if (q && q.l) { var p = q.l.split('/'); return pairLabel(p[0], p[1]); } return entryLabel(e); }
 
-/* ---------- 오늘의 다섯 문제 ---------- */
+/* ---------- 오늘의 다섯 문제 ----------
+   쉬운 문제부터 내고 갈수록 어려워진다. 첫 문제는 언제나 순한맛이다.
+   외래어 표기 문제는 따로 줄을 세운다. 매운맛 날에만, 그것도 두 번에 한 번꼴로 한 문제만 끼운다(여드레에 한 번꼴).
+   사람들이 '맞춤법'으로 떠올리는 건 우리말이라서. */
 var SPICE = { 1: '순한맛', 2: '보통맛', 3: '매운맛' };
-var PATTERN = { 1: [3, 2, 0], 2: [1, 3, 1], 3: [0, 2, 3] };   // [쉬움, 보통, 어려움] 문제 수
+var PATTERN = { 1: [3, 2, 0], 2: [2, 2, 1], 3: [1, 2, 2] };       // [쉬움, 보통, 어려움] 문제 수. 이 차례대로 낸다.
+var PATTERN_V06 = { 1: [3, 2, 0], 2: [1, 3, 1], 3: [0, 2, 3] };   // 11월 14일까지의 방식. 그 방식으로 풀다 만 오늘 문제를 이어 낼 때만 쓴다.
+var LW_ODDS = 1 / 2;                                               // 매운맛 날에 외래어 한 문제가 끼는 비율
 function spiceOf(no) { var r = rngOf('맵기' + no)(); return r < 0.2 ? 1 : r < 0.75 ? 2 : 3; }
+function lwDay(no) { return spiceOf(no) === 3 && rngOf('외래어' + no)() < LW_ODDS; }
 var _dailyCache = {};
-function dailySet(no) {
+function dailySet(no, v06) {
   no = Math.max(1, no | 0);
-  if (_dailyCache[no]) return _dailyCache[no];
-  // 난이도별로 줄을 세워 두고 날마다 차례로 꺼낸다. 줄이 끝나면 새로 섞어 다시 돈다.
-  var pools = [1, 2, 3].map(function (lv) { return QS.filter(function (q) { return q.lv === lv; }).map(function (q) { return q.qid; }).sort(); });
-  var ptr = [0, 0, 0], perms = [{}, {}, {}];
+  var ck = (v06 ? 'v06:' : '') + no;
+  if (_dailyCache[ck]) return _dailyCache[ck];
+  // 난이도별로 줄을 세워 두고 날마다 차례로 꺼낸다. 줄이 끝나면 새로 섞어 다시 돈다. 넷째 줄은 외래어.
+  function ids(f) { return QS.filter(f).map(function (q) { return q.qid; }).sort(); }
+  var pools = [1, 2, 3].map(function (lv) { return ids(function (q) { return q.lv === lv && (v06 || !q.lw); }); });
+  if (!v06) pools.push(ids(function (q) { return q.lw; }));
+  var ptr = [0, 0, 0, 0], perms = [{}, {}, {}, {}];
   function permOf(li, c) { return perms[li][c] || (perms[li][c] = shuffled(pools[li], rngOf('줄' + li + ':' + c))); }
+  function next(li, used) {
+    var n = pools[li].length, guard = 0;
+    while (n > 0 && guard++ < n * 2) {
+      var c = Math.floor(ptr[li] / n), i = ptr[li] % n; ptr[li]++;
+      var q = QBY[permOf(li, c)[i]];
+      if (!used[q.eid]) { used[q.eid] = 1; return q; }
+    }
+    return null;
+  }
   var out = null;
   for (var d = 1; d <= no; d++) {
-    var pat = PATTERN[spiceOf(d)], used = {}, picked = [];
-    for (var li = 0; li < 3; li++) {
-      var need = pat[li], guard = 0, n = pools[li].length;
-      while (need > 0 && n > 0 && guard++ < n * 2) {
-        var c = Math.floor(ptr[li] / n), i = ptr[li] % n; ptr[li]++;
-        var q = QBY[permOf(li, c)[i]];
-        if (used[q.eid]) continue;
-        used[q.eid] = 1; picked.push(q); need--;
-      }
+    var pat = (v06 ? PATTERN_V06 : PATTERN)[spiceOf(d)], slots = [], used = {}, picked = [];
+    for (var li = 0; li < 3; li++) for (var k = 0; k < pat[li]; k++) slots.push(li);
+    if (!v06 && lwDay(d)) {
+      // 외래어 한 문제: 첫 칸은 비워 두고, 맵기가 같은(없으면 가장 가까운) 칸 가운데 맨 뒤에 넣는다.
+      var w = next(3, used), at = -1;
+      for (var j = slots.length - 1; w && j >= 1; j--) if (at < 0 || Math.abs(slots[j] + 1 - w.lv) < Math.abs(slots[at] + 1 - w.lv)) at = j;
+      if (w) picked[at] = w;
     }
-    if (d === no) out = picked;
+    for (var s = 0; s < slots.length; s++) if (!picked[s]) picked[s] = next(slots[s], used);
+    if (d === no) out = picked.filter(Boolean);
   }
+  // 맵기 순서로(같은 맵기면 원래 순서대로)
+  out = out.map(function (q, i) { return [q, i]; }).sort(function (x, y) { return x[0].lv - y[0].lv || x[1] - y[1]; }).map(function (x) { return x[0]; });
   var set = {
     no: no, spice: spiceOf(no),
     qs: out.map(function (q) {
@@ -1017,8 +1036,48 @@ function dailySet(no) {
       return { qid: q.qid, eid: q.eid, qi: q.qi, lv: q.lv, s: q.s, a: q.a, b: q.b, opts: flip ? [q.b, q.a] : [q.a, q.b], ans: flip ? 1 : 0 };
     })
   };
-  _dailyCache[no] = set;
+  _dailyCache[ck] = set;
   return set;
+}
+
+/* ---------- 끝까지 도전: 순한맛부터 시작해 맞힐수록 매워진다 ----------
+   n번째 문제의 맵기는 RAMP 비율로 뽑는다. 같은 말은 열 문제 안에 다시 안 내도록 애쓴다.
+   외래어는 열 번째 문제 전엔 안 내고, 그 뒤로도 열다섯 문제에 많아야 하나(그 자리마다 열에 하나꼴). */
+var RAMP = [                       // [몇 번째 문제 전까지, 순한맛, 보통맛, 매운맛 비율]
+  [3, 1, 0, 0],
+  [10, 0.5, 0.5, 0],
+  [20, 0.15, 0.7, 0.15],
+  [35, 0, 0.6, 0.4],
+  [Infinity, 0, 0.35, 0.65]
+];
+var LW_GAP = 15;
+function endlessList(rnd) {
+  function pool(lw, lv) { return shuffled(QS.filter(function (q) { return q.lv === lv && !q.lw === !lw; }), rnd); }
+  var ko = [pool(0, 1), pool(0, 2), pool(0, 3)], lws = [pool(1, 1), pool(1, 2), pool(1, 3)];
+  var out = [], seen = {}, lastLw = -Infinity;
+  function left(ps) { return ps[0].length + ps[1].length + ps[2].length; }
+  function levelAt(k) {
+    for (var r = 0; r < RAMP.length; r++) if (k < RAMP[r][0]) break;
+    var row = RAMP[r], x = rnd();
+    return x < row[1] ? 1 : x < row[1] + row[2] ? 2 : 3;
+  }
+  function take(ps, lv, k) {
+    var order = lv === 1 ? [1, 2, 3] : lv === 2 ? [2, 3, 1] : [3, 2, 1];   // 고른 맵기가 바닥나면 이 차례로 대신한다
+    for (var o = 0; o < 3; o++) {
+      var arr = ps[order[o] - 1];
+      if (!arr.length) continue;
+      for (var i = arr.length - 1; i >= 0; i--) if (!(arr[i].eid in seen) || k - seen[arr[i].eid] >= 10) return arr.splice(i, 1)[0];
+      return arr.pop();
+    }
+    return null;
+  }
+  for (var k = 0; left(ko) + left(lws) > 0; k++) {
+    var lv = levelAt(k), useLw = left(lws) > 0 && (left(ko) === 0 || (k >= 9 && k - lastLw >= LW_GAP && rnd() < 0.1));
+    var q = take(useLw ? lws : ko, lv, k);
+    if (useLw) lastLw = k;
+    seen[q.eid] = k; out.push(q);
+  }
+  return out;
 }
 
 /* ---------- 오답 상자(간격 반복) ----------
@@ -1183,7 +1242,7 @@ function shareLinks(text) {
 
 if (typeof module !== 'undefined') module.exports = {
   CONFIG: CONFIG, rngOf: rngOf, dayIdx: dayIdx, idxOfDate: idxOfDate, dateOfIdx: dateOfIdx, keyOfIdx: keyOfIdx, dayNoOf: dayNoOf,
-  ENT: ENT, QS: QS, entryLabel: entryLabel, qLabel: qLabel, spiceOf: spiceOf, dailySet: dailySet, PATTERN: PATTERN,
+  ENT: ENT, QS: QS, entryLabel: entryLabel, qLabel: qLabel, spiceOf: spiceOf, dailySet: dailySet, PATTERN: PATTERN, lwDay: lwDay, endlessList: endlessList, RAMP: RAMP,
   grade: grade, addFromFind: addFromFind, dueList: dueList, boxCounts: boxCounts, streakOf: streakOf, rankOf: rankOf, stampOf: stampOf,
   layoutCells: layoutCells, blankOf: blankOf, charCount: charCount, norm: norm, lookup: lookup,
   xWeight: xWeight, shareText: shareText, shareBest: shareBest, shareEndless: shareEndless, shareLinks: shareLinks
@@ -1501,8 +1560,9 @@ var Card = (function () {
   }
   function startDaily() {
     var key = tKey(); if (S.days[key]) return startReview();
-    var set = dailySet(tNo()), skip = {};
     if (!S.cur || S.cur.key !== key) S.cur = { key: key, res: [], ms: 0 };
+    if (!S.cur.res.length) S.cur.v = 2;   // 11월 14일까지의 방식으로 풀다 만 오늘 문제만 그 문제 그대로 마저 낸다
+    var set = dailySet(tNo(), S.cur.v !== 2), skip = {};
     set.qs.forEach(function (q) { skip[q.eid] = 1; });
     ses = newSes('daily', set.qs.map(function (q) { return mkItem(q, 'daily'); }).concat(dueItems(skip)));
     ses.set = set; ses.i = S.cur.res.length; ses.ms = S.cur.ms; number(); save(); go('quiz');
@@ -1512,7 +1572,7 @@ var Card = (function () {
     ses = newSes('review', list); number(); go('quiz');
   }
   function startEndless() {
-    ses = newSes('endless', shuffled(QS, Math.random).map(function (q) { return mkItem(q, 'endless'); })); number(); go('quiz');
+    ses = newSes('endless', endlessList(Math.random).map(function (q) { return mkItem(q, 'endless'); })); number(); go('quiz');
   }
   function cur() { return ses.list[ses.i]; }
   function bannerOf(it) {
