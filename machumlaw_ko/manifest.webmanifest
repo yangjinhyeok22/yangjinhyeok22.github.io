@@ -1,0 +1,31 @@
+{
+  "name": "The 맞춤 Korean",
+  "short_name": "The 맞춤 Korean",
+  "lang": "en",
+  "description": "Korean practice for learners and teachers: 5 questions a day, lesson links from your teacher, no sign-up. Luyện tiếng Hàn mỗi ngày, không cần đăng ký.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#131923",
+  "theme_color": "#131923",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
