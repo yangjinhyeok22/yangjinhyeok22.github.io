@@ -1,7 +1,7 @@
 // The 맞춤 맞춤법 게임의 서비스 워커. 인터넷이 없어도 열리게 한다.
 // - 페이지는 열 때마다 서버에 새 판이 있는지 묻고(no-cache), 인터넷이 안 될 때만 저장해 둔 판을 쓴다.
 // - 이 주소(yangjinhyeok22.github.io)는 다른 앱과 함께 쓴다. 그래서 이름이 matchum- 으로 시작하는 저장분만 다루고 남의 것은 건드리지 않는다.
-var PREFIX = 'matchum-', CACHE = PREFIX + '2a9dd26e';
+var PREFIX = 'matchum-', CACHE = PREFIX + '6e02a434';
 var HOME = new URL('./', self.location).pathname;           // 예: /machumlaw/
 var FILES = ['./index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './apple-touch-icon.png'];
 function mine(req) { return caches.open(CACHE).then(function (c) { return c.match(req); }); }
